@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Prototype non public : on empêche l'indexation et le suivi des liens par les moteurs -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Location courte durée d'ASI | SOCOMEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   LOCATION COURTE DURÉE D'ASI : page détail
+   SOCOMEC · maquette d'intention · Vanilla HTML/CSS/JS (aucune dépendance)
+
+   Page détail du parcours Services v2. Chrome et tokens repris à
+   l'identique de services.html ; sections calquées sur le gabarit
+   archivé site/archives/platinum-warranty.html : EF-012.
+   Contenu issu du catalogue 2025 et du PIM, sans reformulation : EF-011.
+   ===================================================================== */
+
+/* ---------- Tokens (repris de la v1) ---------- */
+:root{
+  --bleu:#004F9E;          /* bleu principal (CTA secondaires, chiffres) */
+  --bleu-nav:#0C4392;      /* bleu barre de navigation / labels footer */
+  --bleu-lien:#0070C0;     /* bleu lien / accents / icônes */
+  --bleu-fonce:#082B5C;    /* bleu profond : bandeau humain */
+  --jaune:#FFCC00;         /* JAUNE ENGAGEMENT : CTA de conversion + accents décoratifs */
+  --tint:#EAF4FC;          /* tint clair (fonds d'icônes, étiquettes) */
+  --gris-bg:#F0F3F9;       /* fond de sections alternées */
+  --ink:#1E1E1C;           /* texte principal */
+  --ink-2:#4A4A47;         /* texte secondaire */
+  --ink-3:#686864;         /* texte tertiaire */
+  --ink-4:#636A74;         /* texte discret. A #9AA1AB jusqu'en 0.5.4, soit 2,61:1
+                              sur blanc : sous le seuil AA, releve par Vianney (R-18).
+                              5,46:1 sur blanc, 4,91:1 sur le gris de section. */
+  --line:#E2E5EB;          /* bordures */
+  --line-2:#C9D3E0;        /* séparateurs discrets */
+  --sans:'Roboto',Arial,sans-serif;
+  --title:'Poppins','Roboto',Arial,sans-serif;
+  --wrap:1280px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;font-family:var(--sans);background:#fff;color:var(--ink);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+}
+img{max-width:100%;display:block}
+a{color:var(--bleu-lien);text-decoration:none}
+a:hover{color:var(--bleu);text-decoration:underline}
+button{font-family:inherit}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+
+/* Focus visible homogène sur tout le parcours (EF-013 / CS-005).
+   Deux traitements : un contour détaché pour les CTA et les liens, où il se
+   voit bien ; un contour net de 2px sur le champ lui-même pour les saisies,
+   où le rectangle détaché était trop appuyé (revue 0.2.0). L'épaisseur passe
+   par une ombre interne pour ne décaler aucun voisin. */
+a:focus-visible,button:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+
+.eyebrow{font:800 11px var(--title);letter-spacing:.14em;color:var(--bleu-lien);margin-bottom:14px}
+@media(min-width:992px){ .eyebrow{font-size:12px;margin-bottom:12px} }
+
+/* Accent décoratif sous les titres : jaune (choix client), desktop only.
+   Réservé aux titres qui tiennent sur UNE seule ligne. */
+.title-accent{display:inline-block;position:relative}
+@media(min-width:992px){
+  .title-accent::after{content:"";position:absolute;right:-30px;bottom:-5px;width:60px;height:2px;background:var(--jaune)}
+}
+
+/* Lien d'évitement : le parcours doit être praticable au clavier seul */
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--bleu);color:#fff;
+  font:600 13px var(--title);padding:12px 18px}
+.skip:focus{left:8px;top:8px;color:#fff;text-decoration:none}
+
+/* =====================================================================
+   HEADER  (identique à la v1)
+   ===================================================================== */
+/* Pas de filet bas : il n'existe pas sur le site en production. */
+.hdr{background:#fff}
+.hdr-top{display:flex;align-items:center;gap:14px;padding:10px 16px;max-width:1920px;margin:0 auto}
+.hdr-logo{height:30px;flex-shrink:0}
+.hdr-search{display:none}
+.hdr-icons,.hdr-nav-links{display:none}
+.hdr-mobile{display:flex;align-items:center;gap:14px;margin-left:auto}
+.icon-btn{width:22px;height:22px;flex-shrink:0}
+.burger{width:44px;height:44px;background:var(--bleu-nav);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex-shrink:0;border:none}
+.burger span{width:20px;height:2.5px;background:#fff}
+.hdr-nav{display:none;background:var(--bleu-nav)}
+
+@media(min-width:992px){
+  .hdr-top{gap:48px;padding:14px 40px;justify-content:space-between}
+  .hdr-logo{height:40px}
+  .hdr-search{display:block;position:relative;flex:1;max-width:760px}
+  .hdr-search input{width:100%;height:44px;border:none;background:var(--gris-bg);padding:0 48px 0 18px;font:400 14px var(--sans);color:var(--ink-2);outline:none}
+  .hdr-search svg{position:absolute;right:16px;top:12px;width:20px;height:20px;fill:none;stroke:var(--ink-2);stroke-width:2}
+  .hdr-mobile{display:none}
+  .hdr-icons{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .hdr-icons .sq{width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .hdr-nav-links{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav-links .nl{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .hdr-nav-links .nl span{font:600 11px var(--title);letter-spacing:.06em;color:var(--bleu-nav)}
+  .hdr-right{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav{display:block}
+  .hdr-nav-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:38px;height:52px;padding:0 40px}
+  .hdr-nav-inner a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .hdr-nav-inner a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .hdr-nav-inner a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+}
+
+/* =====================================================================
+   BARRE DE NAV CONDENSÉE (révélée au scroll-up) : identique à la v1
+   ===================================================================== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:45;background:var(--bleu-nav);transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,31,63,.18)}
+.navbar.visible{transform:translateY(0)}
+.navbar-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:16px;height:52px;padding:0 16px}
+.nav-logo{height:24px;flex-shrink:0;display:block}
+.nav-links{display:none}
+.nav-icons-mobile{display:flex;align-items:center;gap:14px;margin-left:auto;flex-shrink:0}
+.nav-icons-mobile .plain{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+.nav-burger{width:34px;height:34px;background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.nav-burger span{width:18px;height:2px;background:#fff}
+.nav-icons-desktop{display:none}
+@media(min-width:992px){
+  .navbar-inner{gap:28px;padding:0 40px}
+  .nav-logo{height:26px}
+  .nav-links{display:flex;align-items:center;gap:26px;flex-shrink:0}
+  .nav-links a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .nav-links a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .nav-links a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+  .nav-icons-mobile{display:none}
+  .nav-icons-desktop{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+  .nav-icons-desktop .ic{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+  .nav-icons-desktop .box{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .nav-icons-desktop .box.outline{border:1px solid rgba(255,255,255,.45)}
+  .nav-icons-desktop .box.yellow{background:var(--jaune)}
+}
+
+/* =====================================================================
+   FIL D'ARIANE : identique à la v1
+   ===================================================================== */
+.bandeau{background:var(--gris-bg);border-bottom:1px solid var(--line)}
+.bandeau-inner{display:flex;align-items:center;gap:8px;padding:12px 16px;max-width:var(--wrap);margin:0 auto;font:400 13px var(--sans);color:var(--ink-3)}
+.bandeau a{color:var(--ink-3)}
+.bandeau .chev{color:var(--ink-4)}
+.bandeau .here{color:var(--ink);font-weight:500}
+@media(min-width:768px){ .bandeau-inner{padding:0 24px;height:48px} }
+@media(min-width:992px){ .bandeau-inner{padding:0 40px} }
+
+/* =====================================================================
+   PAGE DÉTAIL v2 : sections reprises du gabarit archivé
+   (site/archives/platinum-warranty.html) : hero, essentiel, avantages,
+   gammes compatibles, formules, CTA expert. Mêmes classes, mêmes
+   proportions : EF-012.
+   ===================================================================== */
+/* Texte réservé aux lecteurs d'écran, déclaré ici pour ne pas dépendre
+   du CSS injecté par ma-demande.js, qui arrive en fin de page. */
+.md-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.sec-top{border-top:1px solid var(--line)}
+.sec-gris{background:var(--gris-bg)}
+
+/* --- Hero --- */
+.hero-inner{padding:36px 16px 8px;max-width:var(--wrap);margin:0 auto}
+.hero h1{font:300 36px/1.14 var(--sans);color:var(--ink);margin-bottom:16px;text-wrap:pretty}
+.hero h1 .accent{color:var(--bleu);font-weight:400}
+.hero .lead{font:400 15px/1.65 var(--sans);color:var(--ink-2);margin-bottom:24px;text-wrap:pretty}
+.hero-cta{display:flex;flex-direction:column;gap:12px;align-items:stretch;padding-bottom:36px}
+@media(min-width:768px){
+  .hero h1{font-size:46px}
+  .hero-cta{flex-direction:row;align-items:center;gap:16px}
+}
+@media(min-width:992px){
+  .hero-inner{padding:64px 40px 0}
+  .hero h1{font:300 56px/1.08 var(--sans);margin-bottom:20px;max-width:900px}
+  .hero .lead{font-size:17px;max-width:640px;margin-bottom:32px}
+  .hero-cta{padding-bottom:56px}
+}
+
+/* --- Boutons (repris du gabarit archivé) --- */
+.btn-primary{border:none;cursor:pointer;background:var(--bleu);color:#fff;font:600 14px var(--title);
+  padding:16px 24px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:background .15s}
+.btn-primary:hover{background:var(--bleu-nav)}
+.btn-primary svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:#fff;stroke-width:2.5}
+/* Service déjà retenu : le bouton porte l'état, comme sur le hub. La coche
+   ne s'affiche QUE dans cet état : sinon elle laisse croire à un service
+   déjà retenu alors qu'il ne l'est pas. */
+.btn-primary svg{display:none}
+.btn-primary[aria-pressed="true"]{background:var(--bleu-fonce)}
+.btn-primary[aria-pressed="true"]:hover{background:#04193a}
+.btn-primary[aria-pressed="true"] svg{display:block}
+.btn-yellow{border:none;cursor:pointer;background:var(--jaune);color:var(--ink);font:600 14px var(--title);
+  padding:16px 24px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  text-decoration:none;transition:filter .15s}
+.btn-yellow:hover{filter:brightness(.96);color:var(--ink);text-decoration:none}
+.btn-yellow svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--ink);stroke-width:2.5}
+.btn-ghost{border:1px solid var(--bleu);background:#fff;color:var(--bleu);font:600 14px var(--title);
+  padding:15px 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;text-decoration:none;transition:background .15s}
+.btn-ghost:hover{background:var(--tint);color:var(--bleu);text-decoration:none}
+.btn-ghost svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--bleu);stroke-width:2.5}
+@media(min-width:768px){
+  .btn-primary,.btn-yellow,.btn-ghost{width:auto;display:inline-flex;padding:16px 30px}
+}
+
+/* --- Essentiel : fonctions + caractéristiques --- */
+.essentiel-inner{padding:44px 16px;max-width:var(--wrap);margin:0 auto}
+.essentiel h2{font:300 26px/1.25 var(--sans);color:var(--ink);margin-bottom:20px;text-wrap:pretty}
+.essentiel-grid{display:flex;flex-direction:column;gap:40px}
+.essentiel-txt{font:400 15px/1.7 var(--sans);color:var(--ink-2);text-wrap:pretty}
+.essentiel-txt p+p{margin-top:14px}
+.carac-list{list-style:none;margin:0;padding:0}
+.carac-list li{display:flex;gap:14px;align-items:flex-start;border-top:1px solid var(--line);
+  padding:15px 0;font:400 14px/1.6 var(--sans);color:var(--ink-2);text-wrap:pretty}
+.carac-list li:last-child{border-bottom:1px solid var(--line)}
+.carac-list svg{width:17px;height:17px;flex-shrink:0;margin-top:3px;fill:none;stroke:var(--bleu-lien);stroke-width:2.5}
+@media(min-width:992px){
+  .essentiel-inner{padding:72px 40px}
+  .essentiel h2{font-size:34px;margin-bottom:28px}
+  .essentiel-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+  .essentiel-txt{font-size:16px}
+  .carac-list li{font-size:15px;padding:18px 0}
+}
+
+/* --- Avantages --- */
+.adv-inner{padding:44px 16px;max-width:var(--wrap);margin:0 auto}
+.adv-head{margin-bottom:24px}
+.adv h2{font:300 28px/1.25 var(--sans);color:var(--ink);text-wrap:pretty}
+.adv-grid{display:flex;flex-direction:column;gap:14px}
+.acard{background:#fff;border:1px solid var(--line);padding:20px;display:flex;gap:16px}
+.acard .ic{width:40px;height:40px;background:var(--tint);display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font:600 17px var(--sans);color:var(--bleu)}
+.acard .ac-t{font:600 15px var(--title);color:var(--ink);margin-bottom:5px}
+.acard .ac-d{font:400 13.5px/1.55 var(--sans);color:var(--ink-3);text-wrap:pretty}
+@media(min-width:768px){ .adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px} }
+@media(min-width:992px){
+  .adv-inner{padding:72px 40px}
+  .adv-head{margin-bottom:40px}
+  .adv h2{font-size:40px;line-height:1.15}
+  .adv-grid{grid-template-columns:repeat(3,1fr);gap:20px}
+  .acard{flex-direction:column;padding:26px}
+}
+
+/* --- Gammes concernées : information de réassurance, JAMAIS un choix (EF-004) --- */
+.compat-inner{padding:44px 16px 48px;max-width:var(--wrap);margin:0 auto}
+.compat h2{font:300 28px/1.25 var(--sans);color:var(--ink);margin-bottom:10px;text-wrap:pretty}
+.compat-lead{font:400 14px/1.6 var(--sans);color:var(--ink-3);margin-bottom:24px;max-width:760px;text-wrap:pretty}
+/* Vignettes produit (passe 0.6.3). Les pastilles texte ne montraient rien :
+   Morgane signalait un manque de visuels sur ces pages. Motif repris de la
+   rubrique « Pour quels produits ? » du site en production : visuel, intitule
+   de gamme, lien vers la categorie.
+   Une gamme sans visuel dans le projet garde la MEME carte, avec son nom en
+   grand a la place de l'image : pas de photo d'un autre produit, qui
+   tromperait, pas de case vide, qui casserait la grille. */
+.gammes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.gcard{background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;
+  padding:14px 14px 16px;transition:box-shadow .2s,border-color .2s}
+.gcard:hover{box-shadow:0 8px 24px rgba(10,30,60,.09)}
+.gcard.trouve{border-color:var(--bleu-lien);box-shadow:0 0 0 1px var(--bleu-lien)}
+.gcard-media{height:104px;display:flex;align-items:center;justify-content:center;
+  background:var(--gris-bg);margin-bottom:12px;overflow:hidden}
+.gcard-media img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+/* Repli typographique : on dit le nom, on ne montre pas un produit tiers. */
+.gcard-media.sans-visuel{font:300 26px var(--sans);color:var(--bleu);letter-spacing:.02em}
+.gcard-nom{font:600 15px var(--title);color:var(--ink)}
+.gcard-cat{font:400 12.5px/1.45 var(--sans);color:var(--ink-3);margin-top:3px;flex:1}
+.gcard-lien{margin-top:12px;min-height:44px;display:inline-flex;align-items:center;gap:7px;
+  font:600 13px var(--title);color:var(--bleu-lien);text-decoration:none;align-self:flex-start}
+.gcard-lien:hover{text-decoration:underline;color:var(--bleu)}
+.gcard-lien svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.5}
+.gammes-plus{margin-top:14px;font:400 13px/1.6 var(--sans);color:var(--ink-3)}
+.gammes-plus b{font-weight:600;color:var(--ink-2)}
+@media(min-width:576px){ .gammes-grid{grid-template-columns:repeat(3,1fr);gap:14px} }
+@media(min-width:992px){
+  .gammes-grid{grid-template-columns:repeat(4,1fr);gap:18px}
+  .gcard{padding:16px 16px 18px}
+  .gcard-media{height:124px;margin-bottom:14px}
+}
+.compat-note{margin-top:22px;border-left:3px solid var(--bleu-lien);background:#fff;
+  padding:13px 15px;font:400 13px/1.6 var(--sans);color:var(--ink-3);max-width:760px;text-wrap:pretty}
+@media(min-width:992px){
+  .compat-inner{padding:72px 40px 80px}
+  .compat h2{font-size:40px;line-height:1.15;margin-bottom:14px}
+  .compat-lead{font-size:15px;margin-bottom:32px}
+}
+
+/* --- Grille complète des prestations (page contrat) --- */
+.grille-inner{padding:44px 16px 48px;max-width:var(--wrap);margin:0 auto}
+.grille h2{font:300 28px/1.25 var(--sans);color:var(--ink);margin-bottom:10px;text-wrap:pretty}
+.grille-lead{font:400 14px/1.6 var(--sans);color:var(--ink-3);margin-bottom:24px;max-width:760px;text-wrap:pretty}
+/* Le tableau défile horizontalement plutôt que d'écraser les colonnes */
+.grille-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);background:#fff}
+table.presta{border-collapse:collapse;width:100%;min-width:620px}
+table.presta caption{text-align:left;font:400 12.5px var(--sans);color:var(--ink-4);padding:12px 16px 0}
+table.presta th,table.presta td{border-bottom:1px solid var(--line);padding:13px 14px;
+  font:400 13.5px/1.5 var(--sans);color:var(--ink-2);text-align:left;vertical-align:top}
+table.presta thead th{background:var(--gris-bg);font:600 13px var(--title);color:var(--ink);
+  white-space:nowrap;border-bottom:1px solid var(--line-2)}
+table.presta thead th.f{text-align:center;width:110px}
+table.presta tbody td.v{text-align:center;white-space:nowrap}
+table.presta tbody tr:last-child th,table.presta tbody tr:last-child td{border-bottom:none}
+table.presta tbody th{font:400 13.5px/1.5 var(--sans);color:var(--ink);font-weight:400}
+.mk-oui svg{width:16px;height:16px;fill:none;stroke:var(--bleu);stroke-width:3}
+.mk-non{color:var(--line-2);font-size:15px}
+.mk-opt{font:600 10px var(--title);letter-spacing:.06em;color:var(--ink-3);background:var(--gris-bg);padding:3px 7px}
+.mk-val{font:600 12.5px var(--title);color:var(--ink)}
+.grille-ajout{display:grid;grid-template-columns:1fr;gap:12px;margin-top:22px}
+@media(min-width:768px){ .grille-ajout{grid-template-columns:repeat(3,1fr);gap:16px} }
+.grille-ajout .btn-primary{width:100%;display:flex}
+@media(min-width:992px){
+  .grille-inner{padding:72px 40px 80px}
+  .grille h2{font-size:40px;line-height:1.15;margin-bottom:14px}
+  .grille-lead{font-size:15px;margin-bottom:32px}
+}
+
+/* --- Rappel constructeur (page mise en service) --- */
+.rappel-inner{padding:36px 16px;max-width:var(--wrap);margin:0 auto}
+.rappel-bloc{border-left:3px solid var(--jaune);background:#fff;border-top:1px solid var(--line);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 22px;max-width:860px}
+.rappel-t{font:600 15px var(--title);color:var(--ink);margin-bottom:8px}
+.rappel-d{font:400 13.5px/1.65 var(--sans);color:var(--ink-3);text-wrap:pretty}
+@media(min-width:992px){ .rappel-inner{padding:56px 40px} }
+
+/* --- CTA expert final --- */
+.expert-inner{padding:44px 16px;max-width:640px;margin:0 auto;text-align:center}
+.expert h2{font:300 30px/1.25 var(--sans);color:var(--ink);margin-bottom:14px;text-wrap:pretty}
+.expert p{font:400 15px/1.65 var(--sans);color:var(--ink-2);margin-bottom:24px;text-wrap:pretty}
+.expert-cta{display:flex;flex-direction:column;gap:12px}
+.expert .sub{margin-top:12px;font:400 13px var(--sans);color:var(--ink-3)}
+@media(min-width:768px){ .expert-cta{flex-direction:row;justify-content:center;gap:16px} }
+@media(min-width:992px){
+  .expert-inner{padding:80px 40px}
+  .expert h2{font-size:44px;line-height:1.15;margin-bottom:18px}
+  .expert p{font-size:16px;margin-bottom:32px}
+}
+
+/* =====================================================================
+   FOOTER : identique à la v1
+   ===================================================================== */
+.ft-news{background:var(--bleu);padding:36px 16px}
+.ft-news h2{font:300 26px/1.25 var(--sans);color:#fff;margin-bottom:20px}
+.ft-field{width:100%;height:52px;border:none;background:#fff;padding:0 16px;font:400 14px var(--sans);color:var(--ink);outline:none;margin-bottom:10px}
+.ft-select-wrap{position:relative;margin-bottom:14px}
+.ft-select{appearance:none;-webkit-appearance:none;width:100%;height:52px;border:none;background:#fff;padding:0 40px 0 16px;font:400 14px var(--sans);color:var(--ink-3);outline:none;cursor:pointer}
+.ft-select-wrap svg{position:absolute;right:14px;top:18px;width:16px;height:16px;fill:none;stroke:var(--ink-2);stroke-width:2;pointer-events:none}
+.ft-legal-text{font:400 11.5px/1.65 var(--sans);color:rgba(255,255,255,.85);text-wrap:pretty}
+.ft-legal-text a{color:#fff;text-decoration:underline}
+.ft-arrow{background:var(--jaune);height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ft-arrow svg{width:46px;height:23px;fill:none;stroke:#fff;stroke-width:2.5}
+.ft-cols{background:var(--gris-bg);padding:36px 16px;display:flex;flex-direction:column;gap:26px}
+.ft-col{display:flex;flex-direction:column;gap:12px}
+.ft-col .ct{font:600 14px var(--title);color:var(--bleu-nav)}
+.ft-col a{font:400 14px var(--sans);color:var(--ink-2)}
+.ft-brand{display:flex;flex-direction:column;align-items:flex-start;gap:16px;border-top:1px solid var(--line);padding-top:24px}
+.ft-social{display:flex;gap:10px}
+.ft-social .s{width:32px;height:32px;border:1px solid var(--bleu-lien);display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 13px var(--sans);color:var(--bleu-lien)}
+.ft-country{border:1px solid var(--bleu-lien);background:#fff;color:var(--bleu-lien);font:600 12px var(--title);letter-spacing:.06em;padding:13px 20px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ft-country:hover{background:var(--tint)}
+.ft-country svg{width:12px;height:12px;fill:none;stroke:var(--bleu-lien);stroke-width:2.5}
+.ft-bar{background:#fff;border-top:1px solid var(--line);padding:20px 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.ft-bar a{font:400 12.5px var(--sans);color:var(--ink-2)}
+.ft-bar .cr{font:400 12px var(--sans);color:var(--ink-4)}
+.ft-top{display:none}
+@media(min-width:992px){
+  .ft-newsrow{background:linear-gradient(90deg,
+      var(--bleu) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)),
+      var(--jaune) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)))}
+  .ft-news-band{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:1fr 160px}
+  .ft-news{background:transparent;padding:52px 64px}
+  .ft-news-inner{max-width:880px;margin:0 auto}
+  .ft-news h2{font-size:32px;margin-bottom:28px}
+  .ft-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .ft-field,.ft-select-wrap{margin-bottom:0;height:54px}
+  .ft-field{height:54px}
+  .ft-select{height:54px}
+  .ft-select-wrap svg{top:19px}
+  .ft-legal-text{font-size:12px}
+  .ft-arrow{background:transparent;height:auto}
+  .ft-arrow svg{width:52px;height:26px}
+  .ft-cols{padding:56px 16px}
+  .ft-cols-inner{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr) 240px;gap:32px;align-items:start}
+  .ft-brand{border-top:none;padding-top:0;gap:20px}
+  .ft-bar{padding:0 16px}
+  .ft-bar-inner{max-width:var(--wrap);margin:0 auto;height:64px;display:flex;align-items:center;gap:32px;width:100%}
+  .ft-bar a{font-size:13px}
+  .ft-bar .cr{font-size:13px}
+  .ft-right{margin-left:auto;display:flex;align-items:center;gap:28px}
+  .ft-top{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .ft-top span{font:600 11px var(--title);letter-spacing:.1em;color:var(--bleu-lien)}
+  .ft-top svg{width:14px;height:14px;fill:none;stroke:var(--bleu-lien);stroke-width:2}
+}
+
+
+/* Visuel de hero (passe 0.6.3). Les pages detail n'avaient aucune image :
+   « manque de visuels de maniere generale » (Morgane, PPTX diapo 3). Aucun
+   decor ajoute, seulement une photo existante du projet qui montre le service
+   dont la page parle. Dimensions explicites sur l'image : elle est au-dessus
+   de la ligne de flottaison, un reflow y couterait du CLS. */
+.hero-visual{position:relative;width:100%;height:200px;margin:4px 0 28px}
+@media(min-width:768px){ .hero-visual{height:260px} }
+@media(min-width:992px){
+  /* align-items:start et non center : avec un centrage, le bloc de texte se
+     recentre quand la police de titre finit de charger et la page bouge.
+     Cale en haut, son sommet ne bouge plus. */
+  .hero-inner{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start}
+  .hero-texte{min-width:0}
+  .hero-visual{height:320px;margin:0}
+  .hero-cta{padding-bottom:0}
+  .hero-inner{padding-bottom:56px}
+}
+
+/* =====================================================================
+   ZONE DE HERO SUR DEGRADE (passe 0.2.0)
+   Degrade repris tel quel de socomec.fr, pour que la page s'inscrive dans
+   le site existant sans rupture. Le fil d'Ariane fait partie du heros : il
+   est donc dans la meme zone, sinon un raccord serait visible entre deux
+   fonds degrades distincts.
+   Contraste mesure du blanc pur sur le point le plus clair du degrade :
+   4,93:1, au-dessus du seuil de 4,5:1 exige pour du texte normal. C'est
+   pour cela que le fil d'Ariane et l'accroche sont a 100 % et 95 % de
+   blanc et non moins : a 82 % on tombait a 3,88:1.
+   ===================================================================== */
+/* Les deux degrades du site, superposes. Le diagonal est la couche du
+   dessus : opaque a 0 %, a 80 % a 100 %, il laisse le degrade vertical
+   affleurer d'un cote. Resultat nettement plus sombre que le diagonal seul
+   compose sur blanc, ce qui etait le defaut de la passe precedente. */
+.hero-zone{background-image:linear-gradient(324.68deg,#00519D 0%,rgba(0,81,157,.8) 100%),
+                            linear-gradient(180deg,#004F9F 0%,#0070C0 100%)}
+.hero-zone .bandeau{background:transparent;border-bottom:none}
+.hero-zone .bandeau-inner{color:#fff}
+.hero-zone .bandeau a{color:#fff}
+.hero-zone .bandeau a:hover{color:#fff}
+.hero-zone .bandeau .chev{color:rgba(255,255,255,.8)}
+.hero-zone .bandeau .here{color:#fff;font-weight:500}
+.hero-zone .hero{background:transparent}
+.hero-zone .eyebrow{color:#fff}
+.hero-zone .hero h1{color:#fff}
+.hero-zone .hero h1 .accent{color:#fff;font-weight:400}
+.hero-zone .hero .lead{color:rgba(255,255,255,.95)}
+/* Le focus doit rester visible sur fond bleu */
+.hero-zone a:focus-visible,.hero-zone button:focus-visible{outline-color:#fff}
+.hero-zone .btn-primary{background:#fff;color:var(--bleu)}
+.hero-zone .btn-primary:hover{background:var(--tint)}
+.hero-zone .btn-primary svg{stroke:var(--bleu)}
+.hero-zone .btn-primary[aria-pressed="true"]{background:rgba(255,255,255,.16);color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
+.hero-zone .btn-primary[aria-pressed="true"] svg{stroke:#fff}
+.hero-zone .btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}
+.hero-zone .btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.hero-zone .btn-ghost svg{stroke:#fff}
+.hero-zone .btn-yellow{background:var(--jaune);color:var(--ink)}
+
+
+/* =====================================================================
+   CONSEILS ET DOCUMENTATION COMPLEMENTAIRE (passe 0.2.0)
+   Deux blocs : conseil sur fond bleu a gauche, documentation sur fond
+   blanc a droite.
+   ===================================================================== */
+.docs2{background:var(--gris-bg);border-top:1px solid var(--line)}
+.docs2-inner{max-width:var(--wrap);margin:0 auto;padding:44px 16px 48px;
+  display:grid;grid-template-columns:1fr;gap:16px}
+.docs2-conseil{background:var(--bleu);padding:28px 24px;display:flex;flex-direction:column}
+.docs2-conseil h2{font:300 26px/1.25 var(--sans);color:#fff;margin-bottom:12px;text-wrap:pretty}
+.docs2-conseil p{font:400 14.5px/1.65 var(--sans);color:rgba(255,255,255,.92);margin-bottom:24px;text-wrap:pretty}
+.docs2-conseil .btn-jaune{margin-top:auto;align-self:flex-start;border:none;cursor:pointer;
+  background:var(--jaune);color:var(--ink);font:600 14px var(--title);padding:15px 26px;
+  display:inline-flex;align-items:center;gap:10px;transition:filter .15s}
+.docs2-conseil .btn-jaune:hover{filter:brightness(.96)}
+.docs2-conseil .btn-jaune svg{width:15px;height:15px;fill:none;stroke:var(--ink);stroke-width:2.5}
+.docs2-liste{background:#fff;border:1px solid var(--line);padding:26px 24px}
+.docs2-liste h2{font:600 18px var(--title);color:var(--ink);margin-bottom:16px}
+.docs2-liste ul{list-style:none;margin:0;padding:0}
+.docs2-liste li{border-bottom:1px solid var(--gris-bg)}
+.docs2-liste li:last-child{border-bottom:none}
+.docs2-liste a{display:flex;align-items:center;gap:12px;padding:13px 0;text-decoration:none;color:var(--ink)}
+.docs2-liste a:hover{color:var(--bleu-lien);text-decoration:none}
+.docs2-liste a:hover .d2-nom{text-decoration:underline}
+.docs2-liste .d2-ic{width:17px;height:17px;flex-shrink:0;fill:none;stroke:var(--bleu-lien);stroke-width:2}
+.docs2-liste .d2-nom{flex:1;font:500 13.5px/1.5 var(--sans);text-wrap:pretty}
+.docs2-liste .d2-meta{flex-shrink:0;font:600 10.5px var(--title);letter-spacing:.06em;color:var(--ink-4)}
+@media(min-width:992px){
+  .docs2-inner{padding:72px 40px 80px;grid-template-columns:1fr 1fr;gap:24px}
+  .docs2-conseil{padding:36px 32px}
+  .docs2-conseil h2{font-size:30px}
+  .docs2-liste{padding:32px 30px}
+}
+
+/* Verification de couverture d'un equipement */
+.couverture{max-width:460px;margin-bottom:26px}
+.couverture label{display:block;font:600 12px var(--title);letter-spacing:.04em;color:var(--ink-3);margin-bottom:7px}
+.couverture-champ{position:relative}
+.couverture input{width:100%;box-sizing:border-box;height:46px;border:1px solid var(--line-2);background:#fff;
+  padding:0 40px 0 14px;font:400 14px var(--sans);color:var(--ink);outline:none}
+.couverture input:focus{outline:none;border-color:var(--bleu-lien);box-shadow:inset 0 0 0 1px var(--bleu-lien)}
+.couverture-champ svg{position:absolute;right:14px;top:15px;width:16px;height:16px;fill:none;
+  stroke:var(--ink-3);stroke-width:2;pointer-events:none}
+/* Resultat simule : reference reconnue, avec badge de couverture */
+.couv-res{margin-top:12px;min-height:22px}
+.couv-trouve{display:flex;align-items:center;gap:12px;background:var(--tint);
+  border-left:3px solid var(--bleu);padding:12px 14px}
+.couv-ref{font:600 14px var(--title);color:var(--ink)}
+.couv-badge{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+  background:var(--bleu);color:#fff;font:700 10.5px var(--title);letter-spacing:.06em;padding:5px 10px}
+.couv-badge svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:3}
+.couv-aide{font:400 12.5px/1.55 var(--sans);color:var(--ink-3);margin-top:8px}
+
+/* =====================================================================
+   IMAGE SLOTS : identique à la v1
+   ===================================================================== */
+.img-slot{width:100%;height:100%;background:linear-gradient(135deg,#F4F7FB,#E7EDF5);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.img-slot.shape-circle{border-radius:50%}
+.img-slot img{width:100%;height:100%;object-fit:cover}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#bloc-expert">Aller à la demande de devis</a>
+
+<!-- ============================================================ HEADER -->
+<header class="hdr">
+  <div class="hdr-top">
+    <img class="hdr-logo" src="../assets/logo-socomec.svg" alt="SOCOMEC, Innovative Power Solutions">
+    <div class="hdr-search">
+      <input placeholder="Rechercher une référence, un mot..." aria-label="Rechercher">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-icons">
+        <div class="sq" style="background:var(--bleu-lien)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+        <div class="sq" style="background:var(--jaune)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      </div>
+      <nav class="hdr-nav-links">
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg><span>RESSOURCES</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="12" cy="12" r="9"></circle></svg><span>DEVIS</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg><span>CONTACT</span></div>
+      </nav>
+    </div>
+    <div class="hdr-mobile">
+      <svg class="icon-btn" viewBox="0 0 24 24" style="fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="hdr-nav">
+    <nav class="hdr-nav-inner">
+      <a href="#">PRODUITS</a><a class="on" href="../services.html">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================ BARRE DE NAV CONDENSÉE (scroll-up) -->
+<nav class="navbar" id="navbar" aria-label="Navigation">
+  <div class="navbar-inner">
+    <img class="nav-logo" src="../assets/logo-small-socomec.svg" alt="SOCOMEC">
+    <div class="nav-links">
+      <a href="#">PRODUITS</a><a class="on" href="../services.html">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </div>
+    <div class="nav-icons-desktop">
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <div class="box outline" title="Documentation"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+      <div class="box yellow" title="Nous contacter"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Ressources"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Contact"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg>
+    </div>
+    <div class="nav-icons-mobile">
+      <svg class="plain" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-zone">
+<!-- ====================================================== FIL D'ARIANE -->
+<div class="bandeau">
+  <nav class="bandeau-inner" aria-label="Fil d'ariane">
+    <a href="#">Accueil</a><span class="chev">›</span>
+    <a href="../services.html">Services</a><span class="chev">›</span>
+    <span class="here">Location courte durée d'ASI</span>
+  </nav>
+</div>
+
+
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-texte">
+    <div class="eyebrow">SERVICE UNITAIRE · FINANCEMENT ET LOCATION</div>
+    <h1>Location courte durée <span class="accent">d'ASI.</span></h1>
+    <p class="lead">Garantir la continuité des opérations pour vos besoins temporaires : une ASI de 10 à 200 kVA, d'une semaine à plusieurs mois, tout compris.</p>
+    <div class="hero-cta"><button type="button" class="btn-primary" data-ajout="location-courte-duree-asi" data-libelle="Ajouter à ma demande" aria-pressed="false"><span class="lbl">Ajouter à ma demande</span><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg></button><a class="btn-ghost" href="#bloc-expert">Demander un devis <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg></a></div></div>
+    <div class="hero-visual">
+      <div class="img-slot"><img src="../assets/heros/hero.webp" alt="Deux ingénieurs consultant une tablette dans une allée de salle serveurs" width="1200" height="676"></div>
+    </div>
+  </div>
+</section>
+</div><!-- /hero-zone -->
+
+<!-- ================================= CARACTÉRISTIQUES + FONCTIONS -->
+<section class="essentiel sec-top">
+  <div class="essentiel-inner">
+    <div class="essentiel-grid">
+      <div>
+        <h2 class="title-accent">En quoi consiste ce service</h2>
+        <div class="essentiel-txt"><p>L'offre de Location Courte Durée d'ASI de SOCOMEC permet de disposer d'une solution temporaire afin d'assurer la continuité de l'alimentation électrique pour une flexibilité optimale.</p><p>Cette solution permet d'accéder à une gamme d'ASI allant de 10 à 200 kVA (autres puissances sur demande), pour des périodes de location allant d'une semaine à plusieurs mois.</p><p>Elle est idéale en cas de coupures ou de perturbations inattendues, durant les périodes de maintenance ou encore pendant des événements spécifiques : chantier, événement de courte durée, période de transition lors du remplacement de l'onduleur.</p></div>
+      </div>
+      <div>
+        <h2>Caractéristiques générales</h2>
+        <ul class="carac-list"><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>Location courte durée d'ASI de 10 à 200 kVA.</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>Durée de location flexible, d'une semaine à plusieurs mois.</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>ASI expédiée sous 4 heures et livrée sur site.</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>Solution tout compris, de l'expédition au renvoi du matériel.</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>Assistance technique téléphonique et service de réparation sous 24 heures ouvrées.</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg><span>Prise en charge intégrale : transport, livraison dédiée sur site, mise en service, maintenance, démontage, enlèvement et transport retour.</span></li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ==================================================== AVANTAGES -->
+<section class="adv sec-gris sec-top">
+  <div class="adv-inner">
+    <div class="adv-head"><div class="eyebrow">CE QUE VOUS Y GAGNEZ</div>
+      <h2 class="title-accent">Les avantages</h2></div>
+    <div class="adv-grid"><article class="acard"><div class="ic">1</div><div><div class="ac-t">Disponibilité immédiate</div><div class="ac-d">Notre stock d'ASI est disponible immédiatement et nos systèmes sont prêts à être expédiés en moins de 4 heures, quelle que soit l'urgence.</div></div></article><article class="acard"><div class="ic">2</div><div><div class="ac-t">Large gamme de 10 à 200 kVA</div><div class="ac-d">Des puissances variables pour protéger toutes vos applications critiques, chaque ASI respectant les normes les plus rigoureuses de l'industrie.</div></div></article><article class="acard"><div class="ic">3</div><div><div class="ac-t">Flexibilité absolue</div><div class="ac-d">Louez pour la durée exacte de votre projet, sans engagement à long terme, et adaptez la location si le projet évolue.</div></div></article><article class="acard"><div class="ic">4</div><div><div class="ac-t">Maintenance et support inclus</div><div class="ac-d">Maintenance et support technique de nos techniciens pendant toute la période de location, avec hotline et intervention sur site sous 24 heures si nécessaire.</div></div></article><article class="acard"><div class="ic">5</div><div><div class="ac-t">Budget maîtrisé</div><div class="ac-d">La location est une dépense d'exploitation, déductible selon la fiscalité locale.</div></div></article></div>
+  </div>
+</section>
+<!-- ======================================== GAMMES (À TITRE INDICATIF) -->
+<section class="compat sec-gris sec-top">
+  <div class="compat-inner">
+    <h2 class="title-accent">Gammes disponibles à la location</h2>
+    <p class="compat-lead">Les gammes ci-dessous vous permettent de vérifier que votre besoin peut être couvert, de 10 à 200 kVA, autres puissances sur demande. Elles sont données à titre indicatif.</p>
+    <div class="couverture">
+      <label for="ref">Vérifier si mon équipement est couvert</label>
+      <div class="couverture-champ">
+        <input id="ref" type="search" autocomplete="off" placeholder="Votre référence produit : MASTERYS BC 40, NETYS RT 3300…">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      </div>
+      <div class="couv-res" id="couv-res" role="status"></div>
+    </div>
+    <div class="gammes-grid" id="gammes-grid" data-service="location-courte-duree-asi"><!-- rendu depuis services-data.js --></div>
+    <p class="gammes-plus" id="gammes-plus" hidden></p>
+    <p class="compat-note">Vous n'avez aucun équipement à choisir ici. La puissance, l'autonomie et la durée exacte se déterminent avec l'expert SOCOMEC qui vous rappellera : c'est lui qui dimensionne l'ASI adaptée à votre site.</p>
+  </div>
+</section>
+<!-- ==================== CONSEILS ET DOCUMENTATION (passe 0.2.0) -->
+<section class="docs2 sec-top">
+  <div class="docs2-inner">
+    <div class="docs2-conseil">
+      <h2>Besoin de conseils sur cette solution ?</h2>
+      <p>Nos experts vous accompagnent dans le choix et le dimensionnement de votre location d'onduleurs.</p>
+      <button type="button" class="btn-jaune" data-ouvrir-demande>Contacter un expert
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg>
+      </button>
+    </div>
+    <div class="docs2-liste">
+      <h2>Documentation</h2>
+      <ul><li><a href="#"><svg class="d2-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14,3 14,8 19,8"></polyline></svg><span class="d2-nom">Guide de dimensionnement des ASI en location</span><span class="d2-meta">PDF 2,4 Mo</span></a></li><li><a href="#"><svg class="d2-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14,3 14,8 19,8"></polyline></svg><span class="d2-nom">Fiche technique location courte durée</span><span class="d2-meta">PDF 740 Ko</span></a></li><li><a href="#"><svg class="d2-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14,3 14,8 19,8"></polyline></svg><span class="d2-nom">Livre blanc : continuité d'alimentation</span><span class="d2-meta">PDF 3,1 Mo</span></a></li><li><a href="#"><svg class="d2-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14,3 14,8 19,8"></polyline></svg><span class="d2-nom">Étude de cas client data center</span><span class="d2-meta">PDF 1,4 Mo</span></a></li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== CTA FINAL -->
+<section class="expert sec-top" id="bloc-expert">
+  <div class="expert-inner">
+    <h2>Un projet, une question ?</h2>
+    <p>Décrivez votre besoin de location : durée, puissance, site : et un spécialiste de votre région vous rappelle pour dimensionner la solution.</p>
+    <div class="expert-cta">
+      <a class="btn-yellow" href="../devis.html">Demander un devis <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg></a>
+      <a class="btn-ghost" href="../services.html">Voir tous les services <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg></a>
+    </div>
+    <div class="sub">Réponse par un spécialiste de votre région. Aucun engagement de votre part.</div>
+  </div>
+</section>
+
+<!-- ============================================================ FOOTER -->
+<footer>
+  <div class="ft-newsrow">
+    <div class="ft-news-band">
+    <div class="ft-news">
+      <div class="ft-news-inner">
+        <h2>Restez informé(e)s de nos actualités</h2>
+        <div class="ft-fields">
+          <input class="ft-field" placeholder="Email professionnel *" aria-label="Email professionnel">
+          <div class="ft-select-wrap">
+            <select class="ft-select" aria-label="Votre activité">
+              <option>Votre activité *</option><option>Bureau d'études</option><option>Installateur / intégrateur</option><option>Industriel</option><option>Data center</option><option>Autre</option>
+            </select>
+            <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </div>
+        </div>
+        <p class="ft-legal-text">Veuillez saisir une adresse e-mail professionnelle (les domaines Yahoo, Gmail et Hotmail ne sont pas acceptés). En validant votre demande, vous acceptez de recevoir la newsletter de SOCOMEC. Vous pouvez vous désinscrire à tout moment via le lien de désabonnement en bas de vos e-mails ou en écrivant à <a href="mailto:dataprivacy@socomec.com">dataprivacy@socomec.com</a>.</p>
+      </div>
+    </div>
+    <div class="ft-arrow"><svg viewBox="0 0 48 24"><line x1="4" y1="12" x2="42" y2="12"></line><polyline points="32,3 42,12 32,21"></polyline></svg></div>
+    </div>
+  </div>
+  <div class="ft-cols">
+    <div class="ft-cols-inner">
+      <div class="ft-col"><div class="ct">Actualités</div><a href="#">Événements</a><a href="#">Espace presse</a></div>
+      <div class="ft-col"><div class="ct">A propos de SOCOMEC</div><a href="#">Qui sommes nous</a><a href="#">Nous rejoindre</a></div>
+      <div class="ft-col"><div class="ct">Portails</div><a href="#">E-order</a><a href="#">Partenaires &amp; distributeurs</a><a href="#">Fournisseurs</a></div>
+      <div class="ft-col"><div class="ct">Contact</div><a href="../devis.html">Demande de devis</a><a href="#">Support Technique</a></div>
+      <div class="ft-col"><div class="ct">Cybersécurité</div><a href="#">Signaler un incident</a><a href="#">Politique de divulgation des vulnérabilités</a></div>
+      <div class="ft-brand">
+        <img src="../assets/logo-socomec.svg" alt="SOCOMEC" style="height:28px" loading="lazy">
+        <div class="ft-social"><div class="s">in</div><div class="s">f</div><div class="s"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:var(--bleu-lien)"><polygon points="6,4 20,12 6,20"></polygon></svg></div></div>
+        <button class="ft-country">COUNTRY SWITCHER<svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <div class="ft-bar-inner">
+      <a href="#">CGU</a><a href="#">Politique de confidentialité</a><a href="#">Politique de cookies</a><a href="#">Mentions Légales</a><a href="#">Accessibilité</a>
+      <div class="ft-right">
+        <span class="cr">Copyright © All rights reserved</span>
+        <div class="ft-top" id="go-top"><span>TOP</span><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="6"></line><polyline points="6,11 12,5 18,11"></polyline></svg></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script src="../assets/services-data.js"></script>
+<script src="../assets/ma-demande.js"></script>
+<script src="../assets/hors-perimetre.js"></script>
+<script>
+/* Synchronisation du ou des boutons « Ajouter à ma demande » avec le
+   composant partagé : le panneau peut retirer un service, le bouton suit. */
+(function(){
+  "use strict";
+  function all(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  var LIB_AJOUT = "Ajouter \u00e0 ma demande", LIB_DEDANS = "Dans ma demande";
+  function sync(){
+    var dedans = window.MaDemande ? window.MaDemande.liste() : [];
+    all("[data-ajout]").forEach(function(b){
+      var pris = dedans.indexOf(b.getAttribute("data-ajout")) > -1;
+      b.setAttribute("aria-pressed", pris ? "true" : "false");
+      var l = b.querySelector(".lbl");
+      var base = b.getAttribute("data-libelle") || LIB_AJOUT;
+      if(l) l.textContent = pris ? LIB_DEDANS : base;
+      if(pris) b.setAttribute("title", "Retirer de ma demande");
+      else b.removeAttribute("title");
+    });
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-ajout]");
+    if(!b || !window.MaDemande) return;
+    var id = b.getAttribute("data-ajout");
+    if(window.MaDemande.contient(id)) window.MaDemande.retirer(id);
+    else                              window.MaDemande.ajouter(id);
+  });
+  if(window.MaDemande){ window.MaDemande.on(sync); sync(); }
+
+
+
+  /* ==================================================================
+     VIGNETTES PRODUIT (passe 0.6.3)
+     Rendues depuis le referentiel `gammes` de services-data.js : la liste
+     des gammes de CE service, jamais une liste ecrite en dur ici. Les
+     cibles des liens sont des pages categorie de socomec.fr, verifiees.
+     ================================================================== */
+  (function vignettes(){
+    var zone = document.querySelector("#gammes-grid");
+    var D = window.SERVICES_DATA;
+    if(!zone || !D) return;
+    var id = zone.getAttribute("data-service");
+    var svc = null;
+    for(var i=0;i<D.services.length;i++) if(D.services[i].id===id) svc = D.services[i];
+    if(!svc) return;
+
+    function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    var FLECHE = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<line x1="4" y1="12" x2="19" y2="12"></line>' +
+      '<polyline points="13,6 19,12 13,18"></polyline></svg>';
+
+    /* Les entrees de `gammes` qui n'en sont pas (« 10 a 200 kVA ») n'ont pas
+       de vignette : elles restent en note sous la grille. */
+    var vues = {}, cartes = [], hors = [];
+    svc.gammes.forEach(function(nom){
+      var g = D.gamme(nom);
+      if(!g){ if(hors.indexOf(nom)===-1) hors.push(nom); return; }
+      if(vues[g.id]) return;
+      vues[g.id] = true;
+      cartes.push(g);
+    });
+
+    zone.innerHTML = cartes.map(function(g){
+      var media = g.visuel
+        ? '<div class="gcard-media"><img src="../assets/' + esc(g.visuel) + '" ' +
+          'alt="Gamme ' + esc(g.nom) + '" width="' + g.largeur + '" height="' + g.hauteur +
+          '" loading="lazy"></div>'
+        : '<div class="gcard-media sans-visuel" aria-hidden="true">' + esc(g.nom) + '</div>';
+      return '<article class="gcard" data-gamme="' + esc(g.nom) + '">' + media +
+        '<div class="gcard-nom">' + esc(g.nom) + '</div>' +
+        '<div class="gcard-cat">' + esc(g.categorie) + '</div>' +
+        '<a class="gcard-lien" href="' + esc(g.url) + '" target="_blank" rel="noopener">' +
+        'Voir la gamme<span class="md-sr"> ' + esc(g.nom) + ' sur socomec.fr</span>' +
+        FLECHE + '</a></article>';
+    }).join("");
+
+    var plus = document.querySelector("#gammes-plus");
+    if(plus && hors.length){
+      plus.hidden = false;
+      plus.innerHTML = '<b>Également couvert :</b> ' + hors.map(esc).join(" · ") + '.';
+    }
+  })();
+  /* ==================================================================
+     VERIFICATION DE COUVERTURE D'UN EQUIPEMENT (passe 0.2.0)
+     Simulation assumee : le resultat positif est fabrique cote client.
+     La vraie verification passera par une API Drupal, la donnee de
+     correspondance reference produit vers service n'existe pas ici.
+     ================================================================== */
+  (function couverture(){
+    var champ = document.querySelector("#ref");
+    if(!champ) return;
+    var res = document.querySelector("#couv-res");
+    var puces = Array.prototype.slice.call(document.querySelectorAll(".gcard"));
+    function norm(t){ return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim(); }
+    var COCHE = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg>';
+
+    champ.addEventListener("input", function(){
+      var saisie = champ.value.trim();
+      var q = norm(saisie);
+      puces.forEach(function(p){ p.classList.remove("trouve"); });
+      if(q.length < 2){ res.innerHTML = ""; return; }
+
+      /* On surligne la gamme correspondante si on la reconnait */
+      var touches = puces.filter(function(p){
+        var g = norm(p.getAttribute("data-gamme"));
+        return g.indexOf(q) > -1 || q.indexOf(g) > -1;
+      });
+      touches.forEach(function(p){ p.classList.add("trouve"); });
+
+      res.innerHTML =
+        '<div class="couv-trouve"><span class="couv-ref">' +
+          saisie.replace(/[<>&"]/g, "") + '</span>' +
+          '<span class="couv-badge">' + COCHE + 'COUVERT</span></div>' +
+        '<p class="couv-aide">' +
+          (touches.length
+            ? 'Gamme reconnue : ' + touches.map(function(p){ return p.getAttribute("data-gamme"); }).join(", ") + '. '
+            : '') +
+          'Résultat simulé dans cette maquette. L\'expert SOCOMEC confirmera la couverture exacte de votre référence.</p>';
+    });
+  })();
+
+  /* « Contacter un expert » ouvre le drawer directement sur le formulaire de
+     contact, comme le CTA de bas de page du hub (ticket 002, R2). */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ouvrir-demande]"), function(b){
+    b.addEventListener("click", function(){ if(window.MaDemande) window.MaDemande.contacterExpert(); });
+  });
+
+  /* Barre de nav condensée : identique aux autres pages */
+  (function(){
+    var navbar=document.querySelector("#navbar"), header=document.querySelector(".hdr");
+    var lastY=window.scrollY||0, ticking=false;
+    function update(){
+      var y=window.scrollY||0, trigger=header.offsetHeight;
+      if(y<=trigger+4)   navbar.classList.remove("visible");
+      else if(y<lastY-2) navbar.classList.add("visible");
+      else if(y>lastY+2) navbar.classList.remove("visible");
+      lastY=y; ticking=false;
+    }
+    window.addEventListener("scroll",function(){
+      if(!ticking){ requestAnimationFrame(update); ticking=true; }
+    },{passive:true});
+  })();
+  document.querySelector("#go-top").addEventListener("click",function(){
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+})();
+</script>
+<script src="../assets/annotations-data.js"></script>
+<script src="../assets/annotations.js"></script>
+</body>
+</html>

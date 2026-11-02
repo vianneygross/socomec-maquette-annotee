@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Prototype non public : on empêche l'indexation et le suivi des liens par les moteurs -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Demande de devis | SOCOMEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   DEMANDE DE DEVIS v2 : formulaire + confirmation
+   SOCOMEC · maquette d'intention · Vanilla HTML/CSS/JS (aucune dépendance)
+
+   Chrome (header, barre de nav condensée, fil d'ariane, footer) et tokens
+   repris à l'identique de services.html : EF-012. Une page, deux états,
+   soumission simulée (research.md D5). La sélection provient de
+   ma-demande.js, dont l'interface flottante n'est pas montée ici : le
+   formulaire est lui-même le récapitulatif.
+
+   Le rouge n'apparaît que sur les champs en erreur ; le jaune reste le
+   CTA d'engagement (« Envoyer ma demande »).
+   ===================================================================== */
+
+/* ---------- Tokens (repris de la v1) ---------- */
+:root{
+  --bleu:#004F9E;          /* bleu principal (CTA secondaires, chiffres) */
+  --bleu-nav:#0C4392;      /* bleu barre de navigation / labels footer */
+  --bleu-lien:#0070C0;     /* bleu lien / accents / icônes */
+  --bleu-fonce:#082B5C;    /* bleu profond : bandeau humain */
+  --jaune:#FFCC00;         /* JAUNE ENGAGEMENT : CTA de conversion + accents décoratifs */
+  --tint:#EAF4FC;          /* tint clair (fonds d'icônes, étiquettes) */
+  --gris-bg:#F0F3F9;       /* fond de sections alternées */
+  --ink:#1E1E1C;           /* texte principal */
+  --ink-2:#4A4A47;         /* texte secondaire */
+  --ink-3:#686864;         /* texte tertiaire */
+  --ink-4:#636A74;         /* texte discret. A #9AA1AB jusqu'en 0.5.4, soit 2,61:1
+                              sur blanc : sous le seuil AA, releve par Vianney (R-18).
+                              5,46:1 sur blanc, 4,91:1 sur le gris de section. */
+  --line:#E2E5EB;          /* bordures */
+  --line-2:#C9D3E0;        /* séparateurs discrets */
+  --sans:'Roboto',Arial,sans-serif;
+  --title:'Poppins','Roboto',Arial,sans-serif;
+  --wrap:1280px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;font-family:var(--sans);background:#fff;color:var(--ink);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+}
+img{max-width:100%;display:block}
+a{color:var(--bleu-lien);text-decoration:none}
+a:hover{color:var(--bleu);text-decoration:underline}
+button{font-family:inherit}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+
+/* Focus visible homogène sur tout le parcours (EF-013 / CS-005).
+   Deux traitements : un contour détaché pour les CTA et les liens, où il se
+   voit bien ; un contour net de 2px sur le champ lui-même pour les saisies,
+   où le rectangle détaché était trop appuyé (revue 0.2.0). L'épaisseur passe
+   par une ombre interne pour ne décaler aucun voisin. */
+a:focus-visible,button:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+
+.eyebrow{font:800 11px var(--title);letter-spacing:.14em;color:var(--bleu-lien);margin-bottom:14px}
+@media(min-width:992px){ .eyebrow{font-size:12px;margin-bottom:12px} }
+
+/* Accent décoratif sous les titres : jaune (choix client), desktop only.
+   Réservé aux titres qui tiennent sur UNE seule ligne. */
+.title-accent{display:inline-block;position:relative}
+@media(min-width:992px){
+  .title-accent::after{content:"";position:absolute;right:-30px;bottom:-5px;width:60px;height:2px;background:var(--jaune)}
+}
+
+/* Lien d'évitement : le parcours doit être praticable au clavier seul */
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--bleu);color:#fff;
+  font:600 13px var(--title);padding:12px 18px}
+.skip:focus{left:8px;top:8px;color:#fff;text-decoration:none}
+
+/* =====================================================================
+   HEADER  (identique à la v1)
+   ===================================================================== */
+/* Pas de filet bas : il n'existe pas sur le site en production. */
+.hdr{background:#fff}
+.hdr-top{display:flex;align-items:center;gap:14px;padding:10px 16px;max-width:1920px;margin:0 auto}
+.hdr-logo{height:30px;flex-shrink:0}
+.hdr-search{display:none}
+.hdr-icons,.hdr-nav-links{display:none}
+.hdr-mobile{display:flex;align-items:center;gap:14px;margin-left:auto}
+.icon-btn{width:22px;height:22px;flex-shrink:0}
+.burger{width:44px;height:44px;background:var(--bleu-nav);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex-shrink:0;border:none}
+.burger span{width:20px;height:2.5px;background:#fff}
+.hdr-nav{display:none;background:var(--bleu-nav)}
+
+@media(min-width:992px){
+  .hdr-top{gap:48px;padding:14px 40px;justify-content:space-between}
+  .hdr-logo{height:40px}
+  .hdr-search{display:block;position:relative;flex:1;max-width:760px}
+  .hdr-search input{width:100%;height:44px;border:none;background:var(--gris-bg);padding:0 48px 0 18px;font:400 14px var(--sans);color:var(--ink-2);outline:none}
+  .hdr-search svg{position:absolute;right:16px;top:12px;width:20px;height:20px;fill:none;stroke:var(--ink-2);stroke-width:2}
+  .hdr-mobile{display:none}
+  .hdr-icons{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .hdr-icons .sq{width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .hdr-nav-links{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav-links .nl{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .hdr-nav-links .nl span{font:600 11px var(--title);letter-spacing:.06em;color:var(--bleu-nav)}
+  .hdr-right{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav{display:block}
+  .hdr-nav-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:38px;height:52px;padding:0 40px}
+  .hdr-nav-inner a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .hdr-nav-inner a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .hdr-nav-inner a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+}
+
+/* =====================================================================
+   BARRE DE NAV CONDENSÉE (révélée au scroll-up) : identique à la v1
+   ===================================================================== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:45;background:var(--bleu-nav);transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,31,63,.18)}
+.navbar.visible{transform:translateY(0)}
+.navbar-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:16px;height:52px;padding:0 16px}
+.nav-logo{height:24px;flex-shrink:0;display:block}
+.nav-links{display:none}
+.nav-icons-mobile{display:flex;align-items:center;gap:14px;margin-left:auto;flex-shrink:0}
+.nav-icons-mobile .plain{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+.nav-burger{width:34px;height:34px;background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.nav-burger span{width:18px;height:2px;background:#fff}
+.nav-icons-desktop{display:none}
+@media(min-width:992px){
+  .navbar-inner{gap:28px;padding:0 40px}
+  .nav-logo{height:26px}
+  .nav-links{display:flex;align-items:center;gap:26px;flex-shrink:0}
+  .nav-links a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .nav-links a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .nav-links a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+  .nav-icons-mobile{display:none}
+  .nav-icons-desktop{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+  .nav-icons-desktop .ic{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+  .nav-icons-desktop .box{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .nav-icons-desktop .box.outline{border:1px solid rgba(255,255,255,.45)}
+  .nav-icons-desktop .box.yellow{background:var(--jaune)}
+}
+
+/* =====================================================================
+   FIL D'ARIANE : identique à la v1
+   ===================================================================== */
+.bandeau{background:var(--gris-bg);border-bottom:1px solid var(--line)}
+.bandeau-inner{display:flex;align-items:center;gap:8px;padding:12px 16px;max-width:var(--wrap);margin:0 auto;font:400 13px var(--sans);color:var(--ink-3)}
+.bandeau a{color:var(--ink-3)}
+.bandeau .chev{color:var(--ink-4)}
+.bandeau .here{color:var(--ink);font-weight:500}
+@media(min-width:768px){ .bandeau-inner{padding:0 24px;height:48px} }
+@media(min-width:992px){ .bandeau-inner{padding:0 40px} }
+
+/* =====================================================================
+   DEVIS v2 : sections propres à la page
+   Une seule page, deux états (formulaire → confirmation), soumission
+   simulée en JS : research.md D5.
+   ===================================================================== */
+.devis{background:#fff}
+/* =====================================================================
+   ZONE DE HERO SUR DEGRADE (passe 0.2.0)
+   Degrade repris tel quel de socomec.fr. Le fil d'Ariane fait partie du
+   heros, il est donc dans la meme zone pour eviter un raccord visible.
+   ===================================================================== */
+/* Les deux degrades du site, superposes. Le diagonal est la couche du
+   dessus : opaque a 0 %, a 80 % a 100 %, il laisse le degrade vertical
+   affleurer d'un cote. Resultat nettement plus sombre que le diagonal seul
+   compose sur blanc, ce qui etait le defaut de la passe precedente. */
+.hero-zone{background-image:linear-gradient(324.68deg,#00519D 0%,rgba(0,81,157,.8) 100%),
+                            linear-gradient(180deg,#004F9F 0%,#0070C0 100%)}
+.hero-zone .bandeau{background:transparent;border-bottom:none}
+.hero-zone .bandeau-inner{color:#fff}
+.hero-zone .bandeau a{color:#fff}
+.hero-zone .bandeau a:hover{color:#fff}
+.hero-zone .bandeau .chev{color:rgba(255,255,255,.8)}
+.hero-zone .bandeau .here{color:#fff;font-weight:500}
+.hero-zone .eyebrow{color:#fff}
+.hero .hero-inner{padding-bottom:8px}
+.hero h1{font:300 32px/1.14 var(--sans);color:#fff;margin-bottom:14px;text-wrap:pretty}
+.hero h1 .accent{color:#fff;font-weight:400}
+.hero .lead{font:400 15px/1.65 var(--sans);color:rgba(255,255,255,.95);margin-bottom:8px;text-wrap:pretty}
+/* Le rappel « ce n'est pas une commande » reste lisible sur le degrade */
+.hero-zone .pas-commande{color:#fff;background:rgba(255,255,255,.12);
+  border-left:3px solid #fff;margin:20px 0 4px}
+.hero-zone a:focus-visible,.hero-zone button:focus-visible{outline-color:#fff}
+@media(min-width:992px){
+  .hero h1{font-size:42px;line-height:1.12;margin-bottom:16px}
+  .hero .lead{font-size:16.5px}
+  .hero .hero-inner{padding-bottom:16px}
+}
+.devis-inner{max-width:860px;margin:0 auto;padding:32px 16px 56px}
+
+/* Positionnement du parcours : une prise de contact, jamais une commande (EF-008) */
+.devis .pas-commande{font:400 13px/1.6 var(--sans);color:var(--ink-3);background:var(--gris-bg);
+  border-left:3px solid var(--bleu-lien);padding:12px 14px;margin:20px 0 0;text-wrap:pretty}
+@media(min-width:992px){
+  .devis-inner{padding:48px 40px 72px}
+  .devis h1{font-size:42px;line-height:1.12;margin-bottom:16px}
+  .devis .lead{font-size:16.5px}
+}
+
+/* --- Blocs de formulaire --- */
+.bloc{border-top:1px solid var(--line);margin-top:32px;padding-top:26px}
+.bloc-t{font:600 17px var(--title);color:var(--ink);margin-bottom:6px}
+.bloc-d{font:400 13.5px/1.6 var(--sans);color:var(--ink-3);margin-bottom:18px;text-wrap:pretty}
+.optionnel{font:600 10px var(--title);letter-spacing:.08em;color:var(--ink-4);
+  background:var(--gris-bg);padding:3px 7px;margin-left:8px;vertical-align:2px}
+
+/* Texte réservé aux lecteurs d'écran. Déclaré ici et non emprunté au CSS
+   injecté par ma-demande.js : en mode sans interface, celui-ci ne s'injecte pas. */
+.md-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* --- Services de la demande (pré-remplis, modifiables : EF-007) --- */
+.dsvc{list-style:none;margin:0;padding:0;border:1px solid var(--line)}
+.dsvc li{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--gris-bg)}
+.dsvc li:last-child{border-bottom:none}
+.dsvc .d-txt{flex:1;min-width:0}
+.dsvc .d-nom{font:500 14px var(--sans);color:var(--ink)}
+.dsvc .d-meta{font:400 11.5px var(--sans);color:var(--ink-4);margin-top:2px}
+.dsvc .d-del{flex-shrink:0;border:none;background:none;cursor:pointer;font:400 12.5px var(--sans);
+  color:var(--ink-3);text-decoration:underline;padding:6px}
+.dsvc .d-del:hover{color:var(--ink)}
+.d-vide{border:1px dashed var(--line-2);background:var(--gris-bg);padding:18px 16px;
+  font:400 13.5px/1.65 var(--sans);color:var(--ink-3);text-wrap:pretty}
+.d-vide a{font-weight:500}
+.d-ajouter{display:inline-block;margin-top:14px;font:600 13px var(--title);color:var(--bleu-lien)}
+/* Deux formules de contrat retenues : possible, mais signalé (cas limite spec) */
+.d-avert{background:var(--tint);color:var(--bleu);font:500 12.5px/1.55 var(--sans);
+  padding:11px 13px;margin-top:14px}
+
+/* --- Champs (motif .fld repris du panneau v1) --- */
+.champs{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:576px){ .champs{grid-template-columns:1fr 1fr;gap:16px 18px} }
+.champ{display:flex;flex-direction:column}
+.champ.pleine{grid-column:1/-1}
+.champ label{font:500 13px var(--sans);color:var(--ink-2);margin-bottom:6px}
+.champ .req{color:var(--bleu-lien);margin-left:2px}
+.fld{width:100%;height:48px;border:1px solid var(--line-2);background:#fff;padding:0 14px;
+  font:400 14px var(--sans);color:var(--ink);outline:none}
+.fld:focus{outline:none;border-color:var(--bleu-lien);box-shadow:inset 0 0 0 1px var(--bleu-lien)}
+textarea.fld{height:110px;padding:12px 14px;resize:vertical;line-height:1.6}
+/* Champ en erreur : le rouge est réservé à ça sur cette page */
+.champ.err .fld{border-color:#C0281E;background:#FFF8F7}
+.err-msg{font:400 12.5px/1.5 var(--sans);color:#C0281E;margin-top:6px;display:none}
+.champ.err .err-msg{display:block}
+
+/* --- Résumé d'erreurs (annoncé, focalisable) --- */
+.err-somm{display:none;border:1px solid #C0281E;background:#FFF8F7;padding:16px 18px;margin-top:28px}
+.err-somm.on{display:block}
+.err-somm .es-t{font:600 14px var(--title);color:#C0281E;margin-bottom:8px}
+.err-somm ul{margin:0;padding-left:18px}
+.err-somm li{font:400 13px/1.7 var(--sans);color:#8E2018}
+.err-somm a{color:#8E2018;text-decoration:underline}
+
+/* --- Envoi --- */
+.envoi{margin-top:28px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.btn-yellow{border:none;cursor:pointer;background:var(--jaune);color:var(--ink);
+  font:600 15px var(--title);padding:16px 28px;display:flex;align-items:center;justify-content:center;
+  gap:10px;width:100%;transition:filter .15s}
+.btn-yellow:hover{filter:brightness(.96)}
+.btn-yellow svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--ink);stroke-width:2.5}
+.btn-ghost{border:1px solid var(--bleu);background:#fff;color:var(--bleu);font:600 14px var(--title);
+  padding:14px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  gap:10px;text-decoration:none;transition:background .15s}
+.btn-ghost:hover{background:var(--tint);color:var(--bleu);text-decoration:none}
+.btn-ghost svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--bleu);stroke-width:2.5}
+.envoi-note{font:400 12.5px/1.6 var(--sans);color:var(--ink-3)}
+@media(min-width:768px){ .btn-yellow{width:auto;display:inline-flex;padding:16px 34px} }
+
+/* --- État 2 : confirmation (EF-008) --- */
+.conf-head{text-align:center;padding-top:8px;margin-bottom:32px}
+.conf-ok{width:56px;height:56px;border-radius:50%;background:var(--tint);display:flex;
+  align-items:center;justify-content:center;margin:0 auto 18px}
+.conf-ok svg{width:26px;height:26px;fill:none;stroke:var(--bleu);stroke-width:2.5}
+.conf-head h1{margin-bottom:12px}
+.conf-head p{font:400 15px/1.7 var(--sans);color:var(--ink-2);max-width:600px;margin:0 auto;text-wrap:pretty}
+.recap{border:1px solid var(--line);background:var(--gris-bg);padding:22px 20px}
+.recap-k{font:800 10.5px var(--title);letter-spacing:.12em;color:var(--ink-3);margin-bottom:14px}
+.recap ul{list-style:none;margin:0;padding:0}
+.recap li{font:400 13.5px/1.6 var(--sans);color:var(--ink);padding:8px 0;
+  border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.recap li:last-child{border-bottom:none}
+.recap li svg{width:15px;height:15px;flex-shrink:0;margin-top:4px;fill:none;stroke:var(--bleu);stroke-width:2.5}
+.recap .r-libre{font:400 13.5px/1.65 var(--sans);color:var(--ink-2);white-space:pre-wrap}
+/* Ce qui se passe ensuite : mise en relation, pas traitement de commande */
+.suite{margin-top:28px}
+.suite-t{font:600 17px var(--title);color:var(--ink);margin-bottom:16px}
+.etapes{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:16px}
+.etape{display:flex;gap:14px}
+.etape .n{flex-shrink:0;width:26px;height:26px;background:var(--bleu);color:#fff;
+  display:flex;align-items:center;justify-content:center;font:700 12px var(--sans)}
+.etape .e-t{font:600 14px var(--title);color:var(--ink);margin-bottom:3px}
+.etape .e-d{font:400 13px/1.6 var(--sans);color:var(--ink-3);text-wrap:pretty}
+.conf-actions{margin-top:36px;padding-top:26px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+@media(min-width:768px){ .etapes{grid-template-columns:repeat(3,1fr);gap:24px} }
+
+/* =====================================================================
+   FOOTER : identique à la v1
+   ===================================================================== */
+.ft-news{background:var(--bleu);padding:36px 16px}
+.ft-news h2{font:300 26px/1.25 var(--sans);color:#fff;margin-bottom:20px}
+.ft-field{width:100%;height:52px;border:none;background:#fff;padding:0 16px;font:400 14px var(--sans);color:var(--ink);outline:none;margin-bottom:10px}
+.ft-select-wrap{position:relative;margin-bottom:14px}
+.ft-select{appearance:none;-webkit-appearance:none;width:100%;height:52px;border:none;background:#fff;padding:0 40px 0 16px;font:400 14px var(--sans);color:var(--ink-3);outline:none;cursor:pointer}
+.ft-select-wrap svg{position:absolute;right:14px;top:18px;width:16px;height:16px;fill:none;stroke:var(--ink-2);stroke-width:2;pointer-events:none}
+.ft-legal-text{font:400 11.5px/1.65 var(--sans);color:rgba(255,255,255,.85);text-wrap:pretty}
+.ft-legal-text a{color:#fff;text-decoration:underline}
+.ft-arrow{background:var(--jaune);height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ft-arrow svg{width:46px;height:23px;fill:none;stroke:#fff;stroke-width:2.5}
+.ft-cols{background:var(--gris-bg);padding:36px 16px;display:flex;flex-direction:column;gap:26px}
+.ft-col{display:flex;flex-direction:column;gap:12px}
+.ft-col .ct{font:600 14px var(--title);color:var(--bleu-nav)}
+.ft-col a{font:400 14px var(--sans);color:var(--ink-2)}
+.ft-brand{display:flex;flex-direction:column;align-items:flex-start;gap:16px;border-top:1px solid var(--line);padding-top:24px}
+.ft-social{display:flex;gap:10px}
+.ft-social .s{width:32px;height:32px;border:1px solid var(--bleu-lien);display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 13px var(--sans);color:var(--bleu-lien)}
+.ft-country{border:1px solid var(--bleu-lien);background:#fff;color:var(--bleu-lien);font:600 12px var(--title);letter-spacing:.06em;padding:13px 20px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ft-country:hover{background:var(--tint)}
+.ft-country svg{width:12px;height:12px;fill:none;stroke:var(--bleu-lien);stroke-width:2.5}
+.ft-bar{background:#fff;border-top:1px solid var(--line);padding:20px 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.ft-bar a{font:400 12.5px var(--sans);color:var(--ink-2)}
+.ft-bar .cr{font:400 12px var(--sans);color:var(--ink-4)}
+.ft-top{display:none}
+@media(min-width:992px){
+  .ft-newsrow{background:linear-gradient(90deg,
+      var(--bleu) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)),
+      var(--jaune) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)))}
+  .ft-news-band{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:1fr 160px}
+  .ft-news{background:transparent;padding:52px 64px}
+  .ft-news-inner{max-width:880px;margin:0 auto}
+  .ft-news h2{font-size:32px;margin-bottom:28px}
+  .ft-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .ft-field,.ft-select-wrap{margin-bottom:0;height:54px}
+  .ft-field{height:54px}
+  .ft-select{height:54px}
+  .ft-select-wrap svg{top:19px}
+  .ft-legal-text{font-size:12px}
+  .ft-arrow{background:transparent;height:auto}
+  .ft-arrow svg{width:52px;height:26px}
+  .ft-cols{padding:56px 16px}
+  .ft-cols-inner{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr) 240px;gap:32px;align-items:start}
+  .ft-brand{border-top:none;padding-top:0;gap:20px}
+  .ft-bar{padding:0 16px}
+  .ft-bar-inner{max-width:var(--wrap);margin:0 auto;height:64px;display:flex;align-items:center;gap:32px;width:100%}
+  .ft-bar a{font-size:13px}
+  .ft-bar .cr{font-size:13px}
+  .ft-right{margin-left:auto;display:flex;align-items:center;gap:28px}
+  .ft-top{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .ft-top span{font:600 11px var(--title);letter-spacing:.1em;color:var(--bleu-lien)}
+  .ft-top svg{width:14px;height:14px;fill:none;stroke:var(--bleu-lien);stroke-width:2}
+}
+
+/* =====================================================================
+   IMAGE SLOTS : identique à la v1
+   ===================================================================== */
+.img-slot{width:100%;height:100%;background:linear-gradient(135deg,#F4F7FB,#E7EDF5);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.img-slot.shape-circle{border-radius:50%}
+.img-slot img{width:100%;height:100%;object-fit:cover}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#form-devis">Aller au formulaire</a>
+
+<!-- ============================================================ HEADER -->
+<header class="hdr">
+  <div class="hdr-top">
+    <img class="hdr-logo" src="assets/logo-socomec.svg" alt="SOCOMEC, Innovative Power Solutions">
+    <div class="hdr-search">
+      <input placeholder="Rechercher une référence, un mot..." aria-label="Rechercher">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-icons">
+        <div class="sq" style="background:var(--bleu-lien)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+        <div class="sq" style="background:var(--jaune)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      </div>
+      <nav class="hdr-nav-links">
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg><span>RESSOURCES</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="12" cy="12" r="9"></circle></svg><span>DEVIS</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg><span>CONTACT</span></div>
+      </nav>
+    </div>
+    <div class="hdr-mobile">
+      <svg class="icon-btn" viewBox="0 0 24 24" style="fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="hdr-nav">
+    <nav class="hdr-nav-inner">
+      <a href="#">PRODUITS</a><a class="on" href="services.html">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================ BARRE DE NAV CONDENSÉE (scroll-up) -->
+<nav class="navbar" id="navbar" aria-label="Navigation">
+  <div class="navbar-inner">
+    <img class="nav-logo" src="assets/logo-small-socomec.svg" alt="SOCOMEC">
+    <div class="nav-links">
+      <a href="#">PRODUITS</a><a class="on" href="services.html">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </div>
+    <div class="nav-icons-desktop">
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <div class="box outline" title="Documentation"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+      <div class="box yellow" title="Nous contacter"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Ressources"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Contact"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg>
+    </div>
+    <div class="nav-icons-mobile">
+      <svg class="plain" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="hero-zone">
+<!-- ====================================================== FIL D'ARIANE -->
+<div class="bandeau">
+  <nav class="bandeau-inner" aria-label="Fil d'ariane">
+    <a href="#">Accueil</a><span class="chev">›</span>
+    <a href="services.html">Services</a><span class="chev">›</span>
+    <span class="here">Demande de devis</span>
+  </nav>
+</div>
+
+<!-- ============================================ ÉTAT 1 : FORMULAIRE (T011) -->
+<!-- Titre du formulaire : dans la zone de héro, sur le dégradé -->
+<section class="hero" id="hero-devis">
+  <div class="devis-inner hero-inner">
+    <div class="eyebrow">SERVICES CONSTRUCTEUR</div>
+    <h1>Demande de devis : <span class="accent">un expert vous rappelle.</span></h1>
+    <p class="lead">Dites-nous ce qui vous intéresse et comment vous joindre. Un spécialiste de votre région reprend contact pour préciser le périmètre et chiffrer votre besoin.</p>
+    <p class="pas-commande">Cette demande n'est pas une commande et ne vous engage à rien. Les précisions techniques (références exactes, puissances, nombre d'équipements) se règlent pendant l'échange avec l'expert, pas dans ce formulaire.</p>
+  </div>
+</section>
+</div><!-- /hero-zone -->
+
+<section class="devis" id="etat-formulaire">
+  <div class="devis-inner">
+    <form id="form-devis" novalidate>
+
+      <!-- Services : pré-remplis depuis la sélection, modifiables (EF-007) -->
+      <div class="bloc">
+        <div class="bloc-t">Les services de votre demande</div>
+        <div class="bloc-d">Repris de votre sélection. Vous pouvez en retirer ici, ou retourner au catalogue pour en ajouter.</div>
+        <div id="zone-services"><!-- rendu en JS --></div>
+      </div>
+
+      <!-- Identité et contact : les SEULS champs requis (EF-007) -->
+      <div class="bloc">
+        <div class="bloc-t">Vous joindre</div>
+        <div class="bloc-d">Trois informations suffisent pour vous rappeler.</div>
+        <div class="champs">
+          <div class="champ" id="champ-nom">
+            <label for="nom">Nom et prénom<span class="req" aria-hidden="true">*</span></label>
+            <input class="fld" id="nom" name="nom" type="text" autocomplete="name" required
+                   aria-required="true" aria-describedby="err-nom">
+            <p class="err-msg" id="err-nom"></p>
+          </div>
+          <div class="champ" id="champ-societe">
+            <label for="societe">Société<span class="req" aria-hidden="true">*</span></label>
+            <input class="fld" id="societe" name="societe" type="text" autocomplete="organization" required
+                   aria-required="true" aria-describedby="err-societe">
+            <p class="err-msg" id="err-societe"></p>
+          </div>
+          <div class="champ" id="champ-email">
+            <label for="email">E-mail professionnel<span class="req" aria-hidden="true">*</span></label>
+            <input class="fld" id="email" name="email" type="email" autocomplete="email" required
+                   aria-required="true" aria-describedby="err-email">
+            <p class="err-msg" id="err-email"></p>
+          </div>
+          <div class="champ" id="champ-tel">
+            <label for="tel">Téléphone<span class="optionnel">OPTIONNEL</span></label>
+            <input class="fld" id="tel" name="tel" type="tel" autocomplete="tel" aria-describedby="err-tel">
+            <p class="err-msg" id="err-tel"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contexte : entièrement optionnel -->
+      <div class="bloc">
+        <div class="bloc-t">Votre contexte<span class="optionnel">OPTIONNEL</span></div>
+        <div class="bloc-d">Utile mais pas nécessaire : ce qui manque sera demandé de vive voix.</div>
+        <div class="champs">
+          <div class="champ pleine" id="champ-equipements">
+            <label for="equipements">Équipements concernés</label>
+            <input class="fld" id="equipements" name="equipements" type="text"
+                   placeholder="Par exemple : 2 MASTERYS BC 40 kVA, site de Lyon">
+          </div>
+          <div class="champ pleine" id="champ-message">
+            <label for="message">Votre demande</label>
+            <textarea class="fld" id="message" name="message"
+                      placeholder="Décrivez votre besoin, une échéance, une contrainte de site…"
+                      aria-describedby="err-message"></textarea>
+            <p class="err-msg" id="err-message"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé d'erreurs : annoncé et focalisable (récit 3, scénario 2) -->
+      <div class="err-somm" id="err-somm" role="alert" tabindex="-1">
+        <div class="es-t" id="err-somm-t"></div>
+        <ul id="err-somm-liste"></ul>
+      </div>
+
+      <div class="envoi">
+        <button class="btn-yellow" type="submit">Envoyer ma demande
+          <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg>
+        </button>
+        <p class="envoi-note">Réponse d'un spécialiste de votre région. Aucun engagement de votre part.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ========================================== ÉTAT 2 : CONFIRMATION (T013) -->
+<section class="devis" id="etat-confirmation" hidden>
+  <div class="devis-inner">
+    <div class="conf-head">
+      <div class="conf-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg></div>
+      <h1 id="conf-titre">Votre demande est transmise.</h1>
+      <p id="conf-sous"></p>
+    </div>
+
+    <div class="recap">
+      <div class="recap-k">CE QUE NOUS AVONS RETENU</div>
+      <div id="recap-corps"><!-- rendu en JS --></div>
+    </div>
+
+    <div class="suite">
+      <div class="suite-t">Ce qui se passe maintenant</div>
+      <ol class="etapes">
+        <li class="etape"><span class="n">1</span><div>
+          <div class="e-t">Un expert prend connaissance de votre demande</div>
+          <div class="e-d">Un spécialiste de votre région, familier des équipements concernés.</div></div></li>
+        <li class="etape"><span class="n">2</span><div>
+          <div class="e-t">Il vous rappelle pour préciser</div>
+          <div class="e-d">Périmètre exact, équipements, échéances : c'est le moment d'en discuter.</div></div></li>
+        <li class="etape"><span class="n">3</span><div>
+          <div class="e-t">Vous recevez une proposition chiffrée</div>
+          <div class="e-d">Établie sur ce que vous aurez validé ensemble.</div></div></li>
+      </ol>
+    </div>
+
+    <div class="conf-actions">
+      <a class="btn-ghost" href="services.html">Retour au catalogue des services
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg>
+      </a>
+      <span class="envoi-note">Votre sélection a été remise à zéro.</span>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============================================================ FOOTER -->
+<footer>
+  <div class="ft-newsrow">
+    <div class="ft-news-band">
+    <div class="ft-news">
+      <div class="ft-news-inner">
+        <h2>Restez informé(e)s de nos actualités</h2>
+        <div class="ft-fields">
+          <input class="ft-field" placeholder="Email professionnel *" aria-label="Email professionnel">
+          <div class="ft-select-wrap">
+            <select class="ft-select" aria-label="Votre activité">
+              <option>Votre activité *</option><option>Bureau d'études</option><option>Installateur / intégrateur</option><option>Industriel</option><option>Data center</option><option>Autre</option>
+            </select>
+            <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </div>
+        </div>
+        <p class="ft-legal-text">Veuillez saisir une adresse e-mail professionnelle (les domaines Yahoo, Gmail et Hotmail ne sont pas acceptés). En validant votre demande, vous acceptez de recevoir la newsletter de SOCOMEC. Vous pouvez vous désinscrire à tout moment via le lien de désabonnement en bas de vos e-mails ou en écrivant à <a href="mailto:dataprivacy@socomec.com">dataprivacy@socomec.com</a>.</p>
+      </div>
+    </div>
+    <div class="ft-arrow"><svg viewBox="0 0 48 24"><line x1="4" y1="12" x2="42" y2="12"></line><polyline points="32,3 42,12 32,21"></polyline></svg></div>
+    </div>
+  </div>
+  <div class="ft-cols">
+    <div class="ft-cols-inner">
+      <div class="ft-col"><div class="ct">Actualités</div><a href="#">Événements</a><a href="#">Espace presse</a></div>
+      <div class="ft-col"><div class="ct">A propos de SOCOMEC</div><a href="#">Qui sommes nous</a><a href="#">Nous rejoindre</a></div>
+      <div class="ft-col"><div class="ct">Portails</div><a href="#">E-order</a><a href="#">Partenaires &amp; distributeurs</a><a href="#">Fournisseurs</a></div>
+      <div class="ft-col"><div class="ct">Contact</div><a href="devis.html" aria-current="page">Demande de devis</a><a href="#">Support Technique</a></div>
+      <div class="ft-col"><div class="ct">Cybersécurité</div><a href="#">Signaler un incident</a><a href="#">Politique de divulgation des vulnérabilités</a></div>
+      <div class="ft-brand">
+        <img src="assets/logo-socomec.svg" alt="SOCOMEC" style="height:28px" loading="lazy">
+        <div class="ft-social"><div class="s">in</div><div class="s">f</div><div class="s"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:var(--bleu-lien)"><polygon points="6,4 20,12 6,20"></polygon></svg></div></div>
+        <button class="ft-country">COUNTRY SWITCHER<svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <div class="ft-bar-inner">
+      <a href="#">CGU</a><a href="#">Politique de confidentialité</a><a href="#">Politique de cookies</a><a href="#">Mentions Légales</a><a href="#">Accessibilité</a>
+      <div class="ft-right">
+        <span class="cr">Copyright © All rights reserved</span>
+        <div class="ft-top" id="go-top"><span>TOP</span><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="6"></line><polyline points="6,11 12,5 18,11"></polyline></svg></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script>window.MA_DEMANDE_SANS_UI = true;</script>
+<script src="assets/services-data.js"></script>
+<script src="assets/ma-demande.js"></script>
+<script src="assets/hors-perimetre.js"></script>
+<script>
+/* =====================================================================
+   DEVIS v2 : deux états sur une page, envoi simulé (research.md D5)
+   La sélection vient de ma-demande.js (source unique) ; l'interface
+   flottante n'est pas montée ici, le formulaire EST le récapitulatif.
+   ===================================================================== */
+(function(){
+  "use strict";
+
+  var D = window.SERVICES_DATA;
+  function $(s,c){ return (c||document).querySelector(s); }
+  function all(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
+  function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                          .replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function service(id){
+    for(var i=0;i<D.services.length;i++) if(D.services[i].id===id) return D.services[i];
+    return null;
+  }
+  var COCHE='<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5,13 10,18 19,7"></polyline></svg>';
+
+  /* ------------------------------------------------------------------
+     ÉTAT 1 : services pré-remplis, modifiables (EF-007)
+     ------------------------------------------------------------------ */
+  function rendreServices(){
+    var ids = window.MaDemande ? window.MaDemande.liste() : [];
+    var zone = $("#zone-services");
+
+    if(!ids.length){
+      /* Sélection vide : la demande libre reste possible (récit 3, sc. 4) */
+      zone.innerHTML =
+        '<div class="d-vide">Vous n\'avez retenu aucun service pour l\'instant, ce n\'est pas bloquant. ' +
+        'Décrivez votre besoin dans « Votre demande » plus bas, ou ' +
+        '<a href="services.html">parcourez le catalogue</a> pour choisir des services.</div>';
+      return;
+    }
+
+    var lignes = ids.map(function(id){
+      var s = service(id);
+      var nom = s ? s.nom : id;
+      /* `categorie` est un identifiant depuis la refonte 0.5.5 : on affiche
+         son intitule via le referentiel, jamais la valeur brute. */
+      var meta = s ? D.nomCategorie(s.categorie) + (s.gammes.length ? " · " + s.gammes.slice(0,3).join(", ") : "") : "";
+      return '<li><div class="d-txt"><div class="d-nom">' + esc(nom) + '</div>' +
+             (meta ? '<div class="d-meta">' + esc(meta) + '</div>' : '') + '</div>' +
+             '<button type="button" class="d-del" data-retirer="' + esc(id) + '">Retirer' +
+             '<span class="md-sr"> ' + esc(nom) + ' de ma demande</span></button></li>';
+    }).join("");
+
+    /* La selection de formule etant unique, il n'y a plus de concurrence a
+       signaler ici : on rappelle simplement la formule retenue. */
+    var formule = window.MaDemande.formuleRetenue();
+    zone.innerHTML = '<ul class="dsvc">' + lignes + '</ul>' +
+      (formule
+        ? '<p class="d-avert">Formule de contrat retenue : ' + esc(formule.nom) +
+          '. L\'expert pourra vous orienter vers une autre formule si votre besoin l\'exige.</p>'
+        : '') +
+      '<a class="d-ajouter" href="services.html">Ajouter d\'autres services →</a>';
+  }
+
+  $("#zone-services").addEventListener("click", function(e){
+    var b = e.target.closest("[data-retirer]");
+    if(!b || !window.MaDemande) return;
+    window.MaDemande.retirer(b.getAttribute("data-retirer"));
+    rendreServices();
+    /* Le focus vient de disparaître avec la ligne retirée */
+    var suivant = $("[data-retirer]") || $("#nom");
+    if(suivant) suivant.focus();
+  });
+
+  /* ------------------------------------------------------------------
+     T012 : validation : messages explicites, saisie conservée
+     ------------------------------------------------------------------ */
+  var REQUIS = [
+    { id:"nom",     libelle:"Nom et prénom",       message:"Indiquez votre nom, pour que l'expert sache à qui il s'adresse." },
+    { id:"societe", libelle:"Société",             message:"Indiquez votre société." },
+    { id:"email",   libelle:"E-mail professionnel", message:"Indiquez votre e-mail professionnel : c'est par là que l'expert vous répondra." }
+  ];
+
+  function erreurChamp(id, msg){
+    $("#champ-" + id).classList.add("err");
+    $("#err-" + id).textContent = msg;
+    $("#" + id).setAttribute("aria-invalid","true");
+  }
+  function viderErreur(id){
+    $("#champ-" + id).classList.remove("err");
+    $("#err-" + id).textContent = "";
+    $("#" + id).removeAttribute("aria-invalid");
+  }
+
+  function valider(){
+    var fautes = [];
+    ["nom","societe","email","message"].forEach(viderErreur);
+
+    REQUIS.forEach(function(c){
+      if(!$("#" + c.id).value.trim()){
+        erreurChamp(c.id, c.message);
+        fautes.push({ id:c.id, libelle:c.libelle, message:c.message });
+      }
+    });
+
+    /* Format d'e-mail : vérifié seulement si le champ est rempli */
+    var mail = $("#email").value.trim();
+    if(mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)){
+      var m = "Cette adresse semble incomplète. Vérifiez le format : nom@societe.fr";
+      erreurChamp("email", m);
+      fautes.push({ id:"email", libelle:"E-mail professionnel", message:m });
+    }
+
+    /* Une demande doit avoir une substance : des services OU un message.
+       On n'ajoute pas un 4e champ requis (EF-007) : c'est l'un ou l'autre. */
+    var ids = window.MaDemande ? window.MaDemande.liste() : [];
+    if(!ids.length && !$("#message").value.trim()){
+      var d = "Aucun service retenu : décrivez votre besoin ici, ou choisissez des services au catalogue.";
+      erreurChamp("message", d);
+      fautes.push({ id:"message", libelle:"Votre demande", message:d });
+    }
+    return fautes;
+  }
+
+  /* Une fois le champ corrigé, l'erreur s'efface à la saisie */
+  ["nom","societe","email","message"].forEach(function(id){
+    $("#" + id).addEventListener("input", function(){
+      if($("#champ-" + id).classList.contains("err")) viderErreur(id);
+    });
+  });
+
+  function afficherSommaire(fautes){
+    var somm = $("#err-somm");
+    if(!fautes.length){ somm.classList.remove("on"); return; }
+    $("#err-somm-t").textContent = fautes.length === 1
+      ? "Il manque une information avant l'envoi."
+      : "Il manque " + fautes.length + " informations avant l'envoi.";
+    $("#err-somm-liste").innerHTML = fautes.map(function(f){
+      return '<li><a href="#' + f.id + '">' + esc(f.libelle) + '</a> : ' + esc(f.message) + '</li>';
+    }).join("");
+    somm.classList.add("on");
+    somm.focus();
+  }
+
+  /* ------------------------------------------------------------------
+     T013 : état 2 : confirmation, mise en relation, vidage
+     ------------------------------------------------------------------ */
+  function confirmer(){
+    /* On capture AVANT de vider la sélection */
+    var ids = window.MaDemande ? window.MaDemande.liste() : [];
+    var noms = ids.map(function(id){ var s = service(id); return s ? s.nom : id; });
+    var message = $("#message").value.trim();
+    var equipements = $("#equipements").value.trim();
+    var mail = $("#email").value.trim();
+
+    $("#conf-sous").textContent = "Un expert SOCOMEC vous recontacte à " + mail +
+      ". Il vous aidera à préciser votre besoin et à finaliser le chiffrage.";
+
+    var corps = "";
+    if(noms.length){
+      corps += '<ul>' + noms.map(function(n){
+        return '<li>' + COCHE + '<span>' + esc(n) + '</span></li>';
+      }).join("") + '</ul>';
+    }
+    if(equipements) corps += '<p class="r-libre"' + (noms.length ? ' style="margin-top:14px"' : '') + '><strong>Équipements concernés :</strong> ' + esc(equipements) + '</p>';
+    if(message)     corps += '<p class="r-libre" style="margin-top:14px">' + esc(message) + '</p>';
+    if(!corps)      corps = '<p class="r-libre">Votre demande de mise en relation.</p>';
+    $("#recap-corps").innerHTML = corps;
+
+    /* Envoi simulé : aucun backend (EF-008). La sélection est vidée. */
+    if(window.MaDemande) window.MaDemande.vider();
+
+    $("#etat-formulaire").hidden = true;
+    $("#etat-confirmation").hidden = false;
+    window.scrollTo({ top:0, behavior:"auto" });
+    $("#conf-titre").setAttribute("tabindex","-1");
+    $("#conf-titre").focus();
+  }
+
+  $("#form-devis").addEventListener("submit", function(e){
+    e.preventDefault();                 /* aucune saisie n'est perdue */
+    var fautes = valider();
+    afficherSommaire(fautes);
+    if(fautes.length){
+      var premier = $("#" + fautes[0].id);
+      if(premier && document.activeElement !== $("#err-somm")) premier.focus();
+      return;
+    }
+    confirmer();
+  });
+
+  /* Le sommaire renvoie au champ fautif */
+  $("#err-somm-liste").addEventListener("click", function(e){
+    var a = e.target.closest("a"); if(!a) return;
+    e.preventDefault();
+    var cible = document.getElementById(a.getAttribute("href").slice(1));
+    if(cible) cible.focus();
+  });
+
+  /* ---------------- Barre de nav condensée : identique aux autres pages */
+  (function navbarScroll(){
+    var navbar = $("#navbar"), header = $(".hdr");
+    var lastY = window.scrollY || 0, ticking = false;
+    function update(){
+      var y = window.scrollY || 0, trigger = header.offsetHeight;
+      if(y <= trigger+4)   navbar.classList.remove("visible");
+      else if(y < lastY-2) navbar.classList.add("visible");
+      else if(y > lastY+2) navbar.classList.remove("visible");
+      lastY = y; ticking = false;
+    }
+    window.addEventListener("scroll", function(){
+      if(!ticking){ requestAnimationFrame(update); ticking = true; }
+    }, {passive:true});
+  })();
+  $("#go-top").addEventListener("click", function(){ window.scrollTo({ top:0, behavior:"smooth" }); });
+
+  rendreServices();
+})();
+</script>
+<script src="assets/annotations-data.js"></script>
+<script src="assets/annotations.js"></script>
+</body>
+</html>

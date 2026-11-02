@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Prototype non public : on empêche l'indexation et le suivi des liens par les moteurs -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Services constructeur : contrats et services unitaires | SOCOMEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   SERVICES v2 : HUB (page maîtresse du parcours Services)
+   SOCOMEC · maquette d'intention · Vanilla HTML/CSS/JS (aucune dépendance)
+
+   Les blocs de chrome (header, barre de nav condensée, fil d'ariane,
+   bandeau humain, footer, image-slots) et les tokens sont repris à
+   l'identique de site/archives/services.html : EF-012, pas de rupture
+   de marque. Les sections propres au hub sont regroupées plus bas
+   sous « HUB v2 ».
+
+   PREMIER ÉCRAN (EF-001) : hero compact, puis les DEUX natures de
+   services, puis les familles d'équipements : la structure de l'offre
+   se lit sans interaction ni scroll (test des 5 secondes, CS-001).
+   ===================================================================== */
+
+/* ---------- Tokens (repris de la v1) ---------- */
+:root{
+  --bleu:#004F9E;          /* bleu principal (CTA secondaires, chiffres) */
+  --bleu-nav:#0C4392;      /* bleu barre de navigation / labels footer */
+  --bleu-lien:#0070C0;     /* bleu lien / accents / icônes */
+  --bleu-fonce:#082B5C;    /* bleu profond : bandeau humain */
+  --jaune:#FFCC00;         /* JAUNE ENGAGEMENT : CTA de conversion + accents décoratifs */
+  --tint:#EAF4FC;          /* tint clair (fonds d'icônes, étiquettes) */
+  --gris-bg:#F0F3F9;       /* fond de sections alternées */
+  --ink:#1E1E1C;           /* texte principal */
+  --ink-2:#4A4A47;         /* texte secondaire */
+  --ink-3:#686864;         /* texte tertiaire */
+  --ink-4:#636A74;         /* texte discret. A #9AA1AB jusqu'en 0.5.4, soit 2,61:1
+                              sur blanc : sous le seuil AA, releve par Vianney (R-18).
+                              5,46:1 sur blanc, 4,91:1 sur le gris de section. */
+  --line:#E2E5EB;          /* bordures */
+  --line-2:#C9D3E0;        /* séparateurs discrets */
+  --sans:'Roboto',Arial,sans-serif;
+  --title:'Poppins','Roboto',Arial,sans-serif;
+  --wrap:1280px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;font-family:var(--sans);background:#fff;color:var(--ink);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+}
+img{max-width:100%;display:block}
+a{color:var(--bleu-lien);text-decoration:none}
+a:hover{color:var(--bleu);text-decoration:underline}
+button{font-family:inherit}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+
+/* Focus visible homogène sur tout le parcours (EF-013 / CS-005).
+   Deux traitements : un contour détaché pour les CTA et les liens, où il se
+   voit bien ; un contour net de 2px sur le champ lui-même pour les saisies,
+   où le rectangle détaché était trop appuyé (revue 0.2.0). L'épaisseur passe
+   par une ombre interne pour ne décaler aucun voisin. */
+a:focus-visible,button:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+
+.eyebrow{font:800 11px var(--title);letter-spacing:.14em;color:var(--bleu-lien);margin-bottom:14px}
+@media(min-width:992px){ .eyebrow{font-size:12px;margin-bottom:12px} }
+
+/* Accent décoratif sous les titres : jaune (choix client), desktop only.
+   Réservé aux titres qui tiennent sur UNE seule ligne. */
+.title-accent{display:inline-block;position:relative}
+@media(min-width:992px){
+  .title-accent::after{content:"";position:absolute;right:-30px;bottom:-5px;width:60px;height:2px;background:var(--jaune)}
+}
+
+/* Texte réservé aux lecteurs d'écran */
+.md-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Lien d'évitement : le parcours doit être praticable au clavier seul */
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--bleu);color:#fff;
+  font:600 13px var(--title);padding:12px 18px}
+.skip:focus{left:8px;top:8px;color:#fff;text-decoration:none}
+
+/* =====================================================================
+   HEADER  (identique à la v1)
+   ===================================================================== */
+/* Pas de filet bas : il n'existe pas sur le site en production. */
+.hdr{background:#fff}
+.hdr-top{display:flex;align-items:center;gap:14px;padding:10px 16px;max-width:1920px;margin:0 auto}
+.hdr-logo{height:30px;flex-shrink:0}
+.hdr-search{display:none}
+.hdr-icons,.hdr-nav-links{display:none}
+.hdr-mobile{display:flex;align-items:center;gap:14px;margin-left:auto}
+.icon-btn{width:22px;height:22px;flex-shrink:0}
+.burger{width:44px;height:44px;background:var(--bleu-nav);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;flex-shrink:0;border:none}
+.burger span{width:20px;height:2.5px;background:#fff}
+.hdr-nav{display:none;background:var(--bleu-nav)}
+
+@media(min-width:992px){
+  .hdr-top{gap:48px;padding:14px 40px;justify-content:space-between}
+  .hdr-logo{height:40px}
+  .hdr-search{display:block;position:relative;flex:1;max-width:760px}
+  .hdr-search input{width:100%;height:44px;border:none;background:var(--gris-bg);padding:0 48px 0 18px;font:400 14px var(--sans);color:var(--ink-2);outline:none}
+  .hdr-search svg{position:absolute;right:16px;top:12px;width:20px;height:20px;fill:none;stroke:var(--ink-2);stroke-width:2}
+  .hdr-mobile{display:none}
+  .hdr-icons{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .hdr-icons .sq{width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .hdr-nav-links{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav-links .nl{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .hdr-nav-links .nl span{font:600 11px var(--title);letter-spacing:.06em;color:var(--bleu-nav)}
+  .hdr-right{display:flex;align-items:center;gap:28px;flex-shrink:0}
+  .hdr-nav{display:block}
+  .hdr-nav-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:38px;height:52px;padding:0 40px}
+  .hdr-nav-inner a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .hdr-nav-inner a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .hdr-nav-inner a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+}
+
+/* =====================================================================
+   BARRE DE NAV CONDENSÉE (révélée au scroll-up) : identique à la v1
+   ===================================================================== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:45;background:var(--bleu-nav);transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,31,63,.18)}
+.navbar.visible{transform:translateY(0)}
+.navbar-inner{max-width:1920px;margin:0 auto;display:flex;align-items:center;gap:16px;height:52px;padding:0 16px}
+.nav-logo{height:24px;flex-shrink:0;display:block}
+.nav-links{display:none}
+.nav-icons-mobile{display:flex;align-items:center;gap:14px;margin-left:auto;flex-shrink:0}
+.nav-icons-mobile .plain{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+.nav-burger{width:34px;height:34px;background:transparent;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.nav-burger span{width:18px;height:2px;background:#fff}
+.nav-icons-desktop{display:none}
+@media(min-width:992px){
+  .navbar-inner{gap:28px;padding:0 40px}
+  .nav-logo{height:26px}
+  .nav-links{display:flex;align-items:center;gap:26px;flex-shrink:0}
+  .nav-links a{font:600 12px var(--title);letter-spacing:.08em;color:#fff;cursor:pointer;text-decoration:none}
+  .nav-links a:hover{opacity:.8;color:#fff;text-decoration:none}
+  .nav-links a.on{height:52px;display:flex;align-items:center;box-shadow:inset 0 -3px 0 #fff}
+  .nav-icons-mobile{display:none}
+  .nav-icons-desktop{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+  .nav-icons-desktop .ic{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;cursor:pointer}
+  .nav-icons-desktop .box{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .nav-icons-desktop .box.outline{border:1px solid rgba(255,255,255,.45)}
+  .nav-icons-desktop .box.yellow{background:var(--jaune)}
+}
+
+/* =====================================================================
+   FIL D'ARIANE : identique à la v1
+   ===================================================================== */
+.bandeau{background:var(--gris-bg);border-bottom:1px solid var(--line)}
+.bandeau-inner{display:flex;align-items:center;gap:8px;padding:12px 16px;max-width:var(--wrap);margin:0 auto;font:400 13px var(--sans);color:var(--ink-3)}
+.bandeau a{color:var(--ink-3)}
+.bandeau .chev{color:var(--ink-4)}
+.bandeau .here{color:var(--ink);font-weight:500}
+@media(min-width:768px){ .bandeau-inner{padding:0 24px;height:48px} }
+@media(min-width:992px){ .bandeau-inner{padding:0 40px} }
+
+/* =====================================================================
+   HUB v2 : HERO
+   Composition reprise de la v1 archivee (ticket 001, R2) : titre, accroche,
+   visuel et ligne de chiffres cles. Le rembourrage bas qui menageait le
+   chevauchement des cartes de nature n'a plus d'objet : ce sont les
+   chiffres cles qui referment desormais le premier ecran.
+   ===================================================================== */
+.hero{background:#fff}
+.hero-inner{padding:36px 16px 0;max-width:var(--wrap);margin:0 auto}
+.hero h1{font:300 30px/1.18 var(--sans);color:var(--ink);margin-bottom:18px;text-wrap:pretty}
+.hero .lead{font:400 15px/1.6 var(--sans);color:var(--ink-2);margin-bottom:30px;max-width:640px;text-wrap:pretty}
+@media(min-width:992px){
+  .hero-inner{padding:56px 40px 0}
+  .hero h1{font:300 42px/1.16 var(--sans);margin-bottom:24px;max-width:620px}
+  .hero .lead{font-size:16.5px;margin-bottom:36px}
+}
+
+
+/* ---------------------------------------------------------------------
+   HERO : composition v1 sur le chassis degrade (R2 / R3)
+   Grille deux colonnes, visuel avec son accent jaune et ligne de chiffres
+   cles, repris de site/archives/v0.1/services.html. Les couleurs d'origine
+   (titre encre, chiffres bleus) ne tiennent pas sur le degrade : elles
+   passent en blanc, contraste mesure au rapport 0.5.1.
+   --------------------------------------------------------------------- */
+.hero-grid{display:grid;grid-template-columns:1fr;gap:0}
+.hero-visual{position:relative;width:100%;height:200px;margin:28px 0 24px}
+.hero-stats{border-top:1px solid rgba(255,255,255,.3);display:grid;grid-template-columns:1fr 1fr;
+  gap:20px 16px;padding:22px 0 26px}
+.stat .num{font:300 26px var(--sans);color:#fff}
+.stat .lbl{font:400 12.5px var(--sans);color:rgba(255,255,255,.95);margin-top:3px}
+
+/* Un seul CTA depuis la decision 0004 : le CTA « Contrat de maintenance »
+   sort du hero, SOCOMEC voulant elargir son image au-dela de la maintenance.
+   La brochure prend la place d'un lien secondaire, jamais celle d'un CTA.
+   Hauteur 48px : au-dessus de la cible de 44px (WCAG 2.2 AA). */
+.hero-cta{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.hero-cta a,.hero-cta button{min-height:48px;border:1px solid transparent;cursor:pointer;
+  font:600 14px var(--title);padding:14px 24px;display:flex;align-items:center;
+  justify-content:center;gap:10px;text-decoration:none;transition:background .15s,filter .15s}
+.hero-cta a svg,.hero-cta button svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke-width:2.5}
+.hero-cta .btn-primary{background:#fff;color:var(--bleu)}
+.hero-cta .btn-primary:hover{background:var(--tint);color:var(--bleu);text-decoration:none}
+.hero-cta .btn-primary svg{stroke:var(--bleu)}
+.hero-cta .btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.75);cursor:pointer}
+.hero-cta .btn-ghost:hover{background:rgba(255,255,255,.14);color:#fff;text-decoration:none}
+.hero-cta .btn-ghost svg{stroke:#fff}
+
+/* Brochure Services : lien secondaire. Le PDF est en finalisation chez
+   SOCOMEC (point ouvert O-3) : l'emplacement est inactif et le dit, plutot
+   qu'un lien mort silencieux. */
+.hero-doc{margin-top:16px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.hero-doc-lien{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:8px 0;
+  background:none;border:none;cursor:default;font:600 13.5px var(--title);color:#fff;
+  text-decoration:underline;text-underline-offset:3px;text-align:left}
+.hero-doc-lien svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:#fff;stroke-width:2}
+.hero-doc-note{font:400 12.5px/1.5 var(--sans);color:rgba(255,255,255,.95)}
+
+@media(min-width:576px){ .hero h1{font-size:36px} }
+@media(min-width:768px){
+  .hero-cta{flex-direction:row;align-items:center}
+  .hero-cta a,.hero-cta button{width:auto;display:inline-flex;padding:14px 26px}
+  .hero-visual{height:280px}
+  .hero-stats{grid-template-columns:repeat(3,1fr);gap:40px}
+  .stat .num{font-size:32px}
+  .stat .lbl{font-size:13px;margin-top:4px}
+}
+@media(min-width:992px){
+  .hero-grid{grid-template-columns:1.1fr .9fr;gap:64px;align-items:center;padding-bottom:40px}
+  .hero-visual{height:340px;margin:0}
+  .hero-stats{padding:26px 0 44px}
+  .stat .num{font-size:34px}
+}
+
+/* =====================================================================
+   HUB v2 : SYNTHÈSE COMPARÉE DES CONTRATS (T006 / EF-001)
+   3 cartes côte à côte + 5 différences clés. La grille complète des
+   prestations relève de la page détail contrat.
+   ===================================================================== */
+.sec-head{margin-bottom:24px}
+.sec-head h2{font:300 30px/1.2 var(--sans);color:var(--ink);text-wrap:pretty}
+.sec-head .sub{font:400 14.5px/1.65 var(--sans);color:var(--ink-3);margin-top:12px;max-width:720px;text-wrap:pretty}
+@media(min-width:992px){
+  .sec-head{margin-bottom:36px}
+  .sec-head h2{font-size:44px;line-height:1.15}
+  .sec-head .sub{font-size:15.5px;margin-top:14px}
+}
+
+/* =====================================================================
+   HUB v2 : CATALOGUE : FILTRES + CARTES + PAGINATION
+   Un filtre actif masque les cartes hors perimetre : une grille a moitie
+   eteinte avait ete signalee en revue. Le listing est pagine depuis la
+   0.5.5 (decision 0004, D4).
+   ===================================================================== */
+.mod{background:var(--gris-bg);border-top:1px solid var(--line)}
+.mod-inner{padding:44px 16px 48px;max-width:var(--wrap);margin:0 auto}
+@media(min-width:992px){ .mod-inner{padding:72px 40px 80px} }
+
+/* ---------------------------------------------------------------------
+   FILTRES, refonte 0.5.5 (decision 0004, D2 et D4)
+   Trois fonctions, pas une de plus : type de service (les 7 categories du
+   PIM), famille de produits (5 valeurs, BESS comprise) et indicateur de
+   contrat. Les puces passent a la ligne au lieu de partir dans un menu
+   « ... » : D4 demande 2 lignes assumees. Un filtre actif MASQUE les cartes
+   hors perimetre au lieu de les estomper. L'indicateur de contrat, lui, ne
+   masque jamais rien de lui-meme : il pose un badge, et c'est une case a
+   cocher distincte qui restreint la liste.
+   --------------------------------------------------------------------- */
+.filtres{margin-bottom:22px;display:flex;flex-direction:column;gap:18px}
+.filtre-lbl{font:800 10.5px var(--title);letter-spacing:.12em;color:var(--ink-3);margin-bottom:10px;display:block}
+.filtre-bloc{min-width:0}
+/* La ligne des tests (decision 0008, D1) : equipement a gauche, contrat a
+   droite. Elle passe a la ligne d'elle-meme sous 768px, le select gardant
+   une largeur utilisable. */
+.tests-rang{display:flex;flex-direction:column;gap:18px}
+.filtre-contrat .select-wrap{width:100%}
+@media(min-width:768px){
+  .tests-rang{flex-direction:row;align-items:flex-start;gap:24px}
+  .recherche-bloc{flex:1 1 auto;min-width:0}
+  /* Le groupe de boutons demande plus de place que l'ancienne liste : la
+     recherche se resserre, comme le ticket 004 l'autorise. */
+  .filtre-contrat{flex:0 0 310px}
+}
+@media(min-width:992px){
+  .recherche-bloc{max-width:540px}
+  .filtre-contrat{flex-basis:360px}
+  .btn-groupe .bg-opt{font-size:13.5px;padding:10px 10px}
+}
+.puces{display:flex;gap:8px;flex-wrap:wrap}
+.chip{white-space:nowrap;border-radius:999px;min-height:44px;padding:10px 18px;font:500 13.5px var(--sans);
+  cursor:pointer;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);
+  display:inline-flex;align-items:center;gap:8px;transition:background .2s,border-color .2s,color .2s}
+.chip.on{background:var(--bleu);border-color:var(--bleu);color:#fff}
+/* D15 : puce sans resultat. L'etat n'est pas porte par la seule couleur, le
+   contour passe en pointilles ; et le libelle reste a 5,60:1 sur blanc, bien
+   au-dessus du seuil, pour que la puce reste lisible et donc choisissable
+   des qu'un autre filtre change. */
+.chip[aria-disabled="true"]{border-style:dashed;border-color:var(--line);
+  background:#fff;color:var(--ink-3);cursor:default}
+.chip[aria-disabled="true"]:hover{background:#fff}
+/* Compteur des services deja retenus dans cette categorie */
+.chip .cpt{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--bleu-lien);color:#fff;
+  font:700 11px var(--sans);display:none;align-items:center;justify-content:center}
+.chip.on .cpt{background:#fff;color:var(--bleu)}
+.chip .cpt.on{display:inline-flex}
+
+/* Indicateur de contrat : un groupe de boutons (decision 0009 D2), et rien
+   d'autre. La case « ne montrer que les services inclus » est supprimee
+   depuis la 0.6.2 : le contrat ne retire jamais une carte (0007 D2).
+   Forme volontairement distincte des puces de categorie : pas de pilule, un
+   bloc unique dont les boutons sont separes par un simple filet. */
+.btn-groupe{display:flex;border:1px solid var(--line-2);background:#fff;width:100%}
+.btn-groupe .bg-opt{flex:1 1 0;min-width:0;min-height:44px;padding:10px 6px;cursor:pointer;
+  border:none;border-left:1px solid var(--line-2);background:none;color:var(--ink-2);
+  font:500 13px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:background .15s,color .15s}
+.btn-groupe .bg-opt:first-child{border-left:none}
+.btn-groupe .bg-opt:hover{background:var(--gris-bg)}
+.btn-groupe .bg-opt:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:-3px}
+/* L'etat retenu ne tient pas qu'a la couleur : fond plein, graisse, et le
+   meme soulignement interieur que l'onglet actif du menu principal. */
+.btn-groupe .bg-opt[aria-checked="true"]{background:var(--bleu);color:#fff;font-weight:700;
+  box-shadow:inset 0 -3px 0 rgba(255,255,255,.9)}
+.btn-groupe .bg-opt[aria-checked="true"]:hover{background:var(--bleu)}
+
+.select-wrap{position:relative;display:inline-block}
+.select-wrap select{appearance:none;-webkit-appearance:none;min-height:44px;width:100%;
+  border:1px solid var(--line-2);background:#fff;color:var(--ink);
+  font:500 13.5px var(--sans);padding:0 42px 0 14px;cursor:pointer}
+.select-wrap select:disabled{color:var(--ink-3);cursor:default}
+.select-wrap select:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:2px}
+.select-wrap svg{position:absolute;right:16px;top:16px;width:13px;height:13px;fill:none;
+  stroke:var(--ink-2);stroke-width:2.5;pointer-events:none}
+
+/* Recherche par reference ou gamme */
+.recherche{position:relative}
+.recherche input{width:100%;box-sizing:border-box;height:46px;border:1px solid var(--line-2);background:#fff;
+  padding:0 46px 0 14px;font:400 14px var(--sans);color:var(--ink);outline:none}
+.recherche input:focus{outline:none;border-color:var(--bleu-lien);box-shadow:inset 0 0 0 1px var(--bleu-lien)}
+.recherche > svg{position:absolute;right:14px;top:15px;width:16px;height:16px;fill:none;
+  stroke:var(--ink-3);stroke-width:2;pointer-events:none}
+.recherche > svg[hidden]{display:none}
+/* Le terme retenu se lit dans le champ (0011 D3) : la loupe cede alors la
+   place a une croix qui l'efface. Le bandeau « Produit retenu » et son lien
+   « Changer », qui disaient la meme chose une ligne plus bas, ont disparu.
+   Fond transparent : la bordure du champ passe dessous, y compris au focus. */
+.q-croix{position:absolute;right:0;top:0;width:44px;height:46px;border:none;background:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.q-croix[hidden]{display:none}
+.q-croix:hover{color:var(--ink)}
+.q-croix:focus-visible{outline:3px solid var(--bleu-lien);outline-offset:-3px}
+.q-croix svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.5}
+
+/* Liste des produits : popover ancre sous le champ (ticket 001, R5) */
+.q-liste{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;margin:0;padding:4px;
+  list-style:none;background:#fff;border:1px solid var(--line-2);
+  box-shadow:0 14px 36px rgba(10,30,60,.18);max-height:320px;overflow-y:auto}
+.q-liste li{padding:0}
+.q-opt{display:block;width:100%;text-align:left;border:none;background:none;cursor:pointer;
+  padding:10px 12px;min-height:44px;font:inherit}
+.q-opt:hover,.q-opt.actif{background:var(--tint)}
+/* Groupes du popover : « Familles » puis « Produits » (decision 0008, D3). */
+.q-grp{padding:9px 12px 5px;font:800 10px var(--title);letter-spacing:.12em;color:var(--ink-3)}
+.q-liste > li + li .q-grp{border-top:1px solid var(--line);margin-top:4px}
+/* Suggestion sans resultat : meme traitement que les puces eteintes (D15),
+   l'etat passe par la forme autant que par la couleur. */
+.q-opt[aria-disabled="true"]{cursor:default;background:#fff}
+.q-opt[aria-disabled="true"] .o-ref{color:var(--ink-3);text-decoration:line-through}
+.q-opt[aria-disabled="true"] .o-meta{color:var(--ink-3)}
+.q-opt[aria-disabled="true"]:hover{background:#fff}
+.q-opt .o-ref{display:block;font:600 13.5px var(--title);color:var(--ink)}
+.q-opt .o-meta{display:block;font:400 12px/1.4 var(--sans);color:var(--ink-3);margin-top:2px}
+.q-vide{padding:14px 12px;font:400 13px/1.5 var(--sans);color:var(--ink-3)}
+.q-aide{font:400 12px/1.5 var(--sans);color:var(--ink-4);margin:7px 0 0}
+/* Remise a zero des filtres, proposee depuis l'etat vide. */
+.raz{background:none;border:none;min-height:44px;padding:0 0 0 10px;font:500 13px var(--sans);
+  color:var(--bleu-lien);cursor:pointer;text-decoration:underline}
+.raz:hover{color:var(--bleu)}
+/* Pagination du listing (decision 0004, D4). 12 cartes par page. */
+.pagin{margin-top:28px;display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
+.pg{min-width:44px;min-height:44px;padding:0 12px;border:1px solid var(--line-2);background:#fff;
+  color:var(--ink-2);font:500 13.5px var(--sans);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center}
+.pg:hover{background:var(--tint)}
+.pg[aria-current="true"]{background:var(--bleu);border-color:var(--bleu);color:#fff;font-weight:700}
+.pg[disabled]{opacity:.45;cursor:default}
+.pg[disabled]:hover{background:#fff}
+.pg svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5}
+
+/* Rappel de fin de grille */
+.fin-grille{margin-top:28px;display:flex;justify-content:center}
+.btn-voir-demande{display:inline-flex;align-items:center;gap:11px;border:none;cursor:pointer;
+  background:var(--jaune);color:var(--ink);font:600 14px var(--title);padding:15px 26px;
+  transition:filter .15s}
+.btn-voir-demande:hover{filter:brightness(.96)}
+.btn-voir-demande svg{width:16px;height:16px;fill:none;stroke:var(--ink);stroke-width:2.5}
+.btn-voir-demande .vd-cpt{min-width:22px;height:22px;padding:0 6px;border-radius:999px;
+  background:var(--ink);color:var(--jaune);font:700 12px var(--sans);
+  display:inline-flex;align-items:center;justify-content:center}
+
+/* Aucun resultat : la recherche libre peut legitimement ne rien trouver */
+.svc-vide{border:1px dashed var(--line-2);background:#fff;padding:24px 20px;
+  font:400 14px/1.7 var(--sans);color:var(--ink-3);text-wrap:pretty}
+.svc-vide b{color:var(--ink)}
+@media(min-width:768px){ .chip{padding:11px 18px;font-size:14px} }
+@media(min-width:992px){ .filtres{margin-bottom:34px} }
+
+/* Rang de commandes : remise a zero (0010 D4) et tri (0009 D3). */
+.grille-rang{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-bottom:18px}
+.grille-cpt{margin:0;font:500 13.5px var(--sans);color:var(--ink-2);white-space:nowrap}
+.grille-cpt b{font-weight:700;color:var(--ink)}
+.raz-filtres{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:9px 16px;
+  cursor:pointer;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);
+  font:500 13px var(--sans)}
+.raz-filtres:hover{background:#fff;border-color:var(--bleu-lien);color:var(--bleu)}
+.raz-filtres svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+/* Cale a droite des que la place le permet. Sous 576px le bouton flottant
+   « Ma demande » occupe le bord droit : le tri reste a gauche pour ne pas
+   passer dessous. */
+.tri-bloc{display:flex;align-items:center;gap:10px}
+@media(min-width:576px){ .tri-bloc{margin-left:auto} }
+.tri-lbl{font:500 13px var(--sans);color:var(--ink-2);white-space:nowrap}
+.tri-bloc .select-wrap{min-width:170px}
+
+.svc-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.svc{background:#fff;border:1px solid var(--line);border-top:3px solid transparent;padding:34px 20px 22px;
+  display:flex;flex-direction:column;transition:opacity .3s,border-color .25s,box-shadow .2s,padding .3s}
+.svc:hover{box-shadow:0 10px 28px rgba(10,30,60,.09)}
+.svc h3{font:600 16px var(--title);color:var(--ink);margin-bottom:8px;transition:font-size .3s,margin .3s}
+.svc-more{flex:1;display:flex;flex-direction:column;min-width:0}
+.svc-cat{font:600 10px var(--title);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px}
+/* Le corps de carte pousse le bouton en bas : les descriptions ont des
+   longueurs differentes, les CTA doivent malgre tout s'aligner. */
+.svc p{font:400 13px/1.6 var(--sans);color:var(--ink-3);margin-bottom:14px;text-wrap:pretty}
+.svc .gammes{margin-top:auto}
+.svc-more > .svc-add{margin-top:14px}
+.svc .tags{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 12px}
+.svc .tag{font:600 10px var(--title);letter-spacing:.06em;color:var(--bleu-lien);background:var(--tint);padding:4px 8px}
+/* Gammes : information de réassurance, jamais un choix (EF-004) */
+.svc .gammes{font:400 11.5px/1.5 var(--sans);color:var(--ink-4);margin-bottom:12px;padding-top:2px}
+.svc .gammes b{font:600 11.5px var(--sans);color:var(--ink-3);font-weight:600}
+/* Inclusion au contrat : ruban de coin (decision 0008, D2). Le badge en
+   ligne de la 0.5.5 se noyait dans la carte et se confondait avec les tags de
+   categorie et de famille. Le ruban s'en distingue par sa position, sa forme
+   et sa couleur ; il n'est pas decoratif, son texte est dans le flux et se lit
+   donc avec la carte. Une carte non incluse ne porte rien du tout.
+   Gris fonce depuis la 0.6.5 (0011 D1) : le vert annoncait un statut la ou il
+   n'y a qu'un fait d'inclusion, et tirait l'oeil plus que la carte elle-meme.
+   Blanc sur --ink-2 : 8,89:1. Le token --vert, sans autre usage, est retire. */
+.svc-ruban{position:absolute;top:0;right:0;z-index:3;
+  background:var(--ink-2);color:#fff;font:700 10.5px var(--title);letter-spacing:.04em;
+  padding:6px 11px 6px 13px;display:inline-flex;align-items:center;gap:6px;
+  clip-path:polygon(9px 0, 100% 0, 100% 100%, 0 100%)}
+.svc-ruban svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3}
+.svc .more{margin-top:auto;font:600 13px var(--title);color:var(--bleu-lien);
+  text-decoration:none;align-self:flex-start}
+.svc .more:hover{text-decoration:underline;color:var(--bleu)}
+@media(min-width:576px){ .svc-grid{grid-template-columns:1fr 1fr;gap:16px} }
+@media(min-width:992px){
+  .svc-grid{grid-template-columns:repeat(3,1fr);gap:18px}
+  .svc{padding:36px 22px 24px}
+  .svc h3{font-size:17px}
+}
+@media(max-width:991px){ .svc-grid{align-items:start} }
+
+/* =====================================================================
+   SÉLECTION « MA DEMANDE » (T009 / EF-004)
+   Motif repris de la v1 (powerlease .pcard-btn / .pcard.selected) :
+   contour bleu, puis bleu plein quand le service est dans la demande,
+   plus une pastille de confirmation en angle de carte. Le jaune reste
+   au CTA de conversion (le bouton « Demander un devis » du panneau).
+   Ajout en 1 clic, aucune étape de qualification. Le bouton bascule :
+   un second clic retire, comme en v1.
+   ===================================================================== */
+.svc{position:relative}
+.svc-add{margin-top:14px;width:100%;padding:11px 0;font:600 13px var(--title);cursor:pointer;
+  border:1.5px solid var(--bleu-lien);background:#fff;color:var(--bleu-lien);
+  transition:background .15s,color .15s}
+.svc-add:hover{background:var(--tint)}
+.selected>.svc-add,.selected .svc-more>.svc-add{background:var(--bleu-lien);color:#fff}
+.selected>.svc-add:hover,.selected .svc-more>.svc-add:hover{background:var(--bleu)}
+/* Carte retenue : bordure ramenée à 1px sur les quatre côtés. Sans ça, le
+   liseré de 3px du haut (couleur de formule sur .formule, indicateur de
+   filtre .hit sur .svc) s'ajoute à l'anneau de 1px du box-shadow et donne
+   un double filet en haut, plus épais que les trois autres côtés.
+   L'anneau porte seul l'emphase. */
+.svc.selected{border:1px solid var(--bleu-lien);
+  box-shadow:0 0 0 1px var(--bleu-lien),0 8px 24px rgba(0,79,158,.10)}
+/* Pastille de confirmation : passee a GAUCHE en 0.6.2, le coin droit etant
+   pris par le ruban d'inclusion. Les deux peuvent coexister sur une meme
+   carte, ils ne se chevauchent plus. */
+.svc-check{position:absolute;top:10px;left:10px;width:22px;height:22px;background:var(--bleu-lien);
+  display:none;align-items:center;justify-content:center;z-index:2}
+.svc-check svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:3}
+.selected>.svc-check{display:flex}
+
+/* =====================================================================
+   HUB v2 : REASSURANCE INTERNATIONALE (decision 0004, D6)
+   Carte du monde en points et chiffres cles, avant le catalogue. Aucune
+   interactivite en 0.5.5, et pas de filtre regional : l'information est de
+   la reassurance, pas un critere de tri.
+   ===================================================================== */
+.monde{background:#fff}
+.monde-inner{max-width:var(--wrap);margin:0 auto;padding:44px 16px 40px;
+  display:flex;flex-direction:column;gap:28px}
+.monde h2{font:300 28px/1.25 var(--sans);color:var(--ink);text-wrap:pretty}
+.monde .sub{font:400 14.5px/1.7 var(--sans);color:var(--ink-3);margin-top:12px;max-width:620px;text-wrap:pretty}
+.monde-stats{display:grid;grid-template-columns:1fr 1fr;gap:20px 16px;margin-top:26px}
+.monde-stats .num{font:300 28px var(--sans);color:var(--bleu)}
+.monde-stats .lbl{font:400 12.5px/1.45 var(--sans);color:var(--ink-2);margin-top:3px}
+/* La carte est decorative : le texte voisin porte deja l'information. */
+.monde-carte{width:100%}
+.monde-carte svg{width:100%;height:auto;display:block}
+@media(min-width:768px){ .monde-stats{grid-template-columns:repeat(3,1fr);gap:28px} }
+@media(min-width:992px){
+  .monde-inner{flex-direction:row;align-items:center;gap:64px;padding:72px 40px 68px}
+  .monde-txt{flex:1 1 46%;min-width:0}
+  .monde-carte{flex:1 1 54%;min-width:0}
+  .monde h2{font-size:36px}
+  .monde-stats .num{font-size:34px}
+}
+
+/* =====================================================================
+   BANDEAU HUMAIN : identique à la v1
+   ===================================================================== */
+.humain{background:#fff;border-top:1px solid var(--line)}
+.humain-inner{padding:44px 16px;max-width:var(--wrap);margin:0 auto}
+.humain h2{font:300 28px/1.25 var(--sans);color:var(--ink);margin-bottom:16px;text-wrap:pretty}
+.humain p{font:400 15px/1.7 var(--sans);color:var(--ink-2);text-wrap:pretty}
+.humain-side{margin-top:32px;display:flex;flex-direction:column;align-items:flex-start;gap:20px}
+.humain-sub{margin-top:12px;font:400 13px var(--sans);color:var(--ink-3)}
+
+/* Selecteur de region. Non interactif : le nombre d'ingenieurs par region
+   n'existe pas dans les donnees disponibles, on ne l'invente pas. */
+.region{width:100%;max-width:340px}
+.region label{display:block;font:600 12px var(--title);letter-spacing:.04em;color:var(--ink-3);
+  margin-bottom:7px}
+.region-wrap{position:relative}
+.region select{appearance:none;-webkit-appearance:none;width:100%;height:48px;border:1px solid var(--line-2);
+  background:#fff;padding:0 40px 0 14px;font:500 14.5px var(--sans);color:var(--ink);outline:none;cursor:pointer}
+.region select:focus{outline:none;border-color:var(--bleu-lien);box-shadow:inset 0 0 0 1px var(--bleu-lien)}
+.region-wrap svg{position:absolute;right:14px;top:16px;width:16px;height:16px;fill:none;
+  stroke:var(--ink-2);stroke-width:2;pointer-events:none}
+
+/* Avatars condenses en groupe : seuls et espaces, ils ne disaient rien. */
+.equipe{display:flex;align-items:center;gap:14px}
+.portraits{display:flex}
+.portraits .p{width:48px;height:48px;flex-shrink:0;border-radius:50%;
+  box-shadow:0 0 0 3px #fff;position:relative}
+.portraits .p + .p{margin-left:-14px}
+.btn-expert{border:none;cursor:pointer;background:var(--jaune);color:var(--ink);
+  font:600 14px var(--title);padding:15px 26px;display:inline-flex;align-items:center;
+  justify-content:center;gap:10px;width:100%;transition:filter .15s}
+.btn-expert:hover{filter:brightness(.96)}
+.btn-expert svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--ink);stroke-width:2.5}
+@media(min-width:768px){ .btn-expert{width:auto} }
+.equipe-nb{font:600 16px var(--title);color:var(--ink)}
+.equipe-lieu{font:400 13px var(--sans);color:var(--ink-3);margin-top:2px}
+@media(min-width:768px){
+  .humain h2{font-size:34px}
+  .portraits .p{width:56px;height:56px}
+  .portraits .p + .p{margin-left:-16px}
+}
+@media(min-width:992px){
+  .humain-inner{padding:64px 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center}
+  .humain h2{font-size:38px;line-height:1.2;margin-bottom:18px}
+  .humain p{font-size:16px;max-width:560px}
+  .humain-side{margin-top:0;gap:26px}
+}
+
+/* =====================================================================
+   FOOTER : identique à la v1
+   ===================================================================== */
+.ft-news{background:var(--bleu);padding:36px 16px}
+.ft-news h2{font:300 26px/1.25 var(--sans);color:#fff;margin-bottom:20px}
+.ft-field{width:100%;height:52px;border:none;background:#fff;padding:0 16px;font:400 14px var(--sans);color:var(--ink);outline:none;margin-bottom:10px}
+.ft-select-wrap{position:relative;margin-bottom:14px}
+.ft-select{appearance:none;-webkit-appearance:none;width:100%;height:52px;border:none;background:#fff;padding:0 40px 0 16px;font:400 14px var(--sans);color:var(--ink-3);outline:none;cursor:pointer}
+.ft-select-wrap svg{position:absolute;right:14px;top:18px;width:16px;height:16px;fill:none;stroke:var(--ink-2);stroke-width:2;pointer-events:none}
+.ft-legal-text{font:400 11.5px/1.65 var(--sans);color:rgba(255,255,255,.85);text-wrap:pretty}
+.ft-legal-text a{color:#fff;text-decoration:underline}
+.ft-arrow{background:var(--jaune);height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ft-arrow svg{width:46px;height:23px;fill:none;stroke:#fff;stroke-width:2.5}
+.ft-cols{background:var(--gris-bg);padding:36px 16px;display:flex;flex-direction:column;gap:26px}
+.ft-col{display:flex;flex-direction:column;gap:12px}
+.ft-col .ct{font:600 14px var(--title);color:var(--bleu-nav)}
+.ft-col a{font:400 14px var(--sans);color:var(--ink-2)}
+.ft-brand{display:flex;flex-direction:column;align-items:flex-start;gap:16px;border-top:1px solid var(--line);padding-top:24px}
+.ft-social{display:flex;gap:10px}
+.ft-social .s{width:32px;height:32px;border:1px solid var(--bleu-lien);display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 13px var(--sans);color:var(--bleu-lien)}
+.ft-country{border:1px solid var(--bleu-lien);background:#fff;color:var(--bleu-lien);font:600 12px var(--title);letter-spacing:.06em;padding:13px 20px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ft-country:hover{background:var(--tint)}
+.ft-country svg{width:12px;height:12px;fill:none;stroke:var(--bleu-lien);stroke-width:2.5}
+.ft-bar{background:#fff;border-top:1px solid var(--line);padding:20px 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.ft-bar a{font:400 12.5px var(--sans);color:var(--ink-2)}
+.ft-bar .cr{font:400 12px var(--sans);color:var(--ink-4)}
+.ft-top{display:none}
+@media(min-width:992px){
+  .ft-newsrow{background:linear-gradient(90deg,
+      var(--bleu) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)),
+      var(--jaune) min(calc(50% + var(--wrap)/2 - 160px), calc(100% - 160px)))}
+  .ft-news-band{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:1fr 160px}
+  .ft-news{background:transparent;padding:52px 64px}
+  .ft-news-inner{max-width:880px;margin:0 auto}
+  .ft-news h2{font-size:32px;margin-bottom:28px}
+  .ft-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .ft-field,.ft-select-wrap{margin-bottom:0;height:54px}
+  .ft-field{height:54px}
+  .ft-select{height:54px}
+  .ft-select-wrap svg{top:19px}
+  .ft-legal-text{font-size:12px}
+  .ft-arrow{background:transparent;height:auto}
+  .ft-arrow svg{width:52px;height:26px}
+  .ft-cols{padding:56px 16px}
+  .ft-cols-inner{max-width:var(--wrap);margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr) 240px;gap:32px;align-items:start}
+  .ft-brand{border-top:none;padding-top:0;gap:20px}
+  .ft-bar{padding:0 16px}
+  .ft-bar-inner{max-width:var(--wrap);margin:0 auto;height:64px;display:flex;align-items:center;gap:32px;width:100%}
+  .ft-bar a{font-size:13px}
+  .ft-bar .cr{font-size:13px}
+  .ft-right{margin-left:auto;display:flex;align-items:center;gap:28px}
+  .ft-top{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .ft-top span{font:600 11px var(--title);letter-spacing:.1em;color:var(--bleu-lien)}
+  .ft-top svg{width:14px;height:14px;fill:none;stroke:var(--bleu-lien);stroke-width:2}
+}
+
+
+/* =====================================================================
+   ZONE DE HERO SUR DEGRADE (passe 0.2.0)
+   Degrade repris tel quel de socomec.fr, pour que la page s'inscrive dans
+   le site existant sans rupture. Le fil d'Ariane fait partie du heros : il
+   est donc dans la meme zone, sinon un raccord serait visible entre deux
+   fonds degrades distincts.
+   Contraste mesure du blanc pur sur le point le plus clair du degrade :
+   4,93:1, au-dessus du seuil de 4,5:1 exige pour du texte normal. C'est
+   pour cela que le fil d'Ariane et l'accroche sont a 100 % et 95 % de
+   blanc et non moins : a 82 % on tombait a 3,88:1.
+   ===================================================================== */
+/* Les deux degrades du site, superposes. Le diagonal est la couche du
+   dessus : opaque a 0 %, a 80 % a 100 %, il laisse le degrade vertical
+   affleurer d'un cote. Resultat nettement plus sombre que le diagonal seul
+   compose sur blanc, ce qui etait le defaut de la passe precedente. */
+.hero-zone{background-image:linear-gradient(324.68deg,#00519D 0%,rgba(0,81,157,.8) 100%),
+                            linear-gradient(180deg,#004F9F 0%,#0070C0 100%)}
+.hero-zone .bandeau{background:transparent;border-bottom:none}
+.hero-zone .bandeau-inner{color:#fff}
+.hero-zone .bandeau a{color:#fff}
+.hero-zone .bandeau a:hover{color:#fff}
+.hero-zone .bandeau .chev{color:rgba(255,255,255,.8)}
+.hero-zone .bandeau .here{color:#fff;font-weight:500}
+.hero-zone .hero{background:transparent}
+.hero-zone .eyebrow{color:#fff}
+.hero-zone .hero h1{color:#fff}
+.hero-zone .hero h1 .accent{color:#fff;font-weight:400}
+.hero-zone .hero .lead{color:rgba(255,255,255,.95)}
+/* Le focus doit rester visible sur fond bleu */
+.hero-zone a:focus-visible,.hero-zone button:focus-visible{outline-color:#fff}
+
+/* =====================================================================
+   IMAGE SLOTS : identique à la v1
+   ===================================================================== */
+.img-slot{width:100%;height:100%;background:linear-gradient(135deg,#F4F7FB,#E7EDF5);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.img-slot.shape-circle{border-radius:50%}
+.img-slot img{width:100%;height:100%;object-fit:cover}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#catalogue">Aller au catalogue des services</a>
+
+<!-- ============================================================ HEADER -->
+<header class="hdr">
+  <div class="hdr-top">
+    <img class="hdr-logo" src="assets/logo-socomec.svg" alt="SOCOMEC, Innovative Power Solutions">
+    <div class="hdr-search">
+      <input placeholder="Rechercher une référence, un mot..." aria-label="Rechercher">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-icons">
+        <div class="sq" style="background:var(--bleu-lien)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+        <div class="sq" style="background:var(--jaune)"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      </div>
+      <nav class="hdr-nav-links">
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg><span>RESSOURCES</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="12" cy="12" r="9"></circle></svg><span>DEVIS</span></div>
+        <div class="nl"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg><span>CONTACT</span></div>
+      </nav>
+    </div>
+    <div class="hdr-mobile">
+      <svg class="icon-btn" viewBox="0 0 24 24" style="fill:none;stroke:var(--bleu-nav);stroke-width:2"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="hdr-nav">
+    <nav class="hdr-nav-inner">
+      <a href="#">PRODUITS</a><a class="on" href="services.html" aria-current="page">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================ BARRE DE NAV CONDENSÉE (scroll-up) -->
+<nav class="navbar" id="navbar" aria-label="Navigation">
+  <div class="navbar-inner">
+    <img class="nav-logo" src="assets/logo-small-socomec.svg" alt="SOCOMEC">
+    <div class="nav-links">
+      <a href="#">PRODUITS</a><a class="on" href="services.html" aria-current="page">SERVICES</a><a href="#">SOLUTIONS</a><a href="#">INNOVATION</a><a href="#">SUPPORT</a><a href="#">SOCOMEC</a><a href="#">RÉFÉRENCES</a>
+    </div>
+    <div class="nav-icons-desktop">
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <div class="box outline" title="Documentation"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line></svg></div>
+      <div class="box yellow" title="Nous contacter"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--bleu-nav);stroke-width:2"><rect x="7" y="3" width="10" height="18" rx="2"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg></div>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Ressources"><line x1="12" y1="4" x2="12" y2="14"></line><polyline points="8,10 12,14 16,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg>
+      <svg class="ic" viewBox="0 0 24 24" role="img" aria-label="Contact"><path d="M4 13a8 8 0 0 1 16 0"></path><rect x="3" y="13" width="4" height="6" rx="1.5"></rect><rect x="17" y="13" width="4" height="6" rx="1.5"></rect></svg>
+    </div>
+    <div class="nav-icons-mobile">
+      <svg class="plain" viewBox="0 0 24 24" role="img" aria-label="Rechercher"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+      <button class="nav-burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-zone">
+<!-- ====================================================== FIL D'ARIANE -->
+<div class="bandeau">
+  <nav class="bandeau-inner" aria-label="Fil d'ariane">
+    <a href="#">Accueil</a><span class="chev">›</span>
+    <span class="here">Services</span>
+  </nav>
+</div>
+
+<!-- ===================================================== HERO (R2 / R3)
+     Composition reprise de la v1 archivee (site/archives/v0.1/services.html) :
+     titre, accroche, visuel et ligne de chiffres cles. Elle remplace
+     l'articulation « deux natures » du premier ecran, sortie du livrable sur
+     decision de Ben (ticket 001). Le chassis degrade des passes 0.2.0 et
+     0.3.0 est conserve : titre, chiffres et CTA sont donc en blanc. -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">SERVICES CONSTRUCTEUR</div>
+        <h1>À chaque étape de la vie de votre installation, <span class="accent">un expert à vos côtés.</span></h1>
+        <p class="lead">De l'avant-projet au renouvellement, 400 experts SOCOMEC et notre réseau de techniciens certifiés accompagnent vos équipements sur site, à distance et dans la durée.</p>
+        <!-- Hierarchie a trois niveaux (decision 0007 D1) : bouton plein,
+             bouton contour, puis lien texte. Le contact direct est un acces
+             SAV demande par Estelle ; il ouvre le drawer sur le formulaire de
+             contact, pas sur une demande de devis vide. -->
+        <div class="hero-cta">
+          <a class="btn-primary" href="#catalogue" data-go="catalogue">Nos services <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg></a>
+          <button type="button" class="btn-ghost" id="hero-contact">Contacter un expert <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg></button>
+        </div>
+        <!-- Brochure Services : lien texte sous les deux boutons. Le PDF est en
+             finalisation chez SOCOMEC, l'emplacement est donc inactif et
+             l'annonce, plutot que de pointer dans le vide. -->
+        <p class="hero-doc">
+          <button type="button" class="hero-doc-lien" aria-disabled="true" aria-describedby="doc-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="15"></line><polyline points="7,10 12,15 17,10"></polyline><line x1="5" y1="19" x2="19" y2="19"></line></svg>
+            Télécharger la brochure SOCOMEC Services (PDF)
+          </button>
+          <span class="hero-doc-note" id="doc-note">Emplacement réservé : la brochure SOCOMEC Services est en cours de finalisation chez SOCOMEC.</span>
+        </p>
+      </div>
+      <div class="hero-visual">
+        <!-- Visuel large recadre en cover : object-position decale a droite
+             pour garder le technicien dans le cadre a toutes les tailles. -->
+        <div class="img-slot">
+          <img src="assets/technicien-surveillance-energie.webp" alt="Technicien SOCOMEC supervisant la consommation énergétique d'un site depuis une salle de contrôle" style="object-position:62% center">
+        </div>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num">400+</div><div class="lbl">experts SOCOMEC</div></div>
+      <div class="stat"><div class="num">110 000</div><div class="lbl">interventions par an</div></div>
+      <div class="stat"><div class="num">25+</div><div class="lbl">centres de support technique</div></div>
+    </div>
+  </div>
+</section>
+</div><!-- /hero-zone -->
+
+<!-- ============================== REASSURANCE INTERNATIONALE (decision 0004)
+     Carte des pays et chiffres cles, avant le catalogue. CONTENU D'EXEMPLE :
+     les trois chiffres sont plausibles et tiennent le temps de la revue du
+     21/10 ; Estelle et Morgane fournissent les valeurs reelles (point O-4).
+     Ils ne doivent pas etre presentes comme une donnee SOCOMEC validee.
+     « implantations » vient du hero, ou il faisait doublon avec ce bloc.
+     La carte est un trace unique : 503 points, aucune dependance, aucune
+     interactivite (la decision la reserve a une iteration ulterieure). -->
+<section class="monde" aria-labelledby="monde-t">
+  <div class="monde-inner">
+    <div class="monde-txt">
+      <div class="eyebrow">UNE PRÉSENCE MONDIALE</div>
+      <h2 id="monde-t">Où que se trouve votre site, un interlocuteur SOCOMEC est à portée.</h2>
+      <p class="sub">Les équipes SOCOMEC Services et leur réseau de techniciens certifiés couvrent les sites de nos clients sur les cinq continents, avec les mêmes procédures d'intervention et le même accès au constructeur.</p>
+      <div class="monde-stats">
+        <div class="stat"><div class="num">30</div><div class="lbl">pays où SOCOMEC est implanté</div></div>
+        <div class="stat"><div class="num">80+</div><div class="lbl">implantations locales</div></div>
+        <div class="stat"><div class="num">4 000</div><div class="lbl">collaborateurs dans le monde</div></div>
+      </div>
+    </div>
+    <div class="monde-carte">
+      <svg viewBox="0 0 480 152" role="img" aria-label="Carte du monde stylisée">
+        <path d="M84 4h0M92 4h0M100 4h0M108 4h0M116 4h0M124 4h0M132 4h0M140 4h0M148 4h0M172 4h0M180 4h0M188 4h0M196 4h0M204 4h0M212 4h0M220 4h0M316 4h0M324 4h0M332 4h0M340 4h0M348 4h0M356 4h0M364 4h0M372 4h0M380 4h0M388 4h0M396 4h0M404 4h0M412 4h0M420 4h0M428 4h0M436 4h0M444 4h0M452 4h0M460 4h0M468 4h0M28 12h0M36 12h0M44 12h0M52 12h0M60 12h0M68 12h0M76 12h0M84 12h0M92 12h0M100 12h0M108 12h0M116 12h0M124 12h0M132 12h0M140 12h0M148 12h0M156 12h0M180 12h0M188 12h0M196 12h0M204 12h0M212 12h0M252 12h0M260 12h0M268 12h0M276 12h0M284 12h0M292 12h0M300 12h0M308 12h0M316 12h0M324 12h0M332 12h0M340 12h0M348 12h0M356 12h0M364 12h0M372 12h0M380 12h0M388 12h0M396 12h0M404 12h0M412 12h0M420 12h0M428 12h0M436 12h0M444 12h0M452 12h0M460 12h0M468 12h0M476 12h0M28 20h0M36 20h0M44 20h0M52 20h0M60 20h0M68 20h0M76 20h0M84 20h0M92 20h0M100 20h0M108 20h0M116 20h0M124 20h0M132 20h0M140 20h0M148 20h0M156 20h0M164 20h0M180 20h0M188 20h0M252 20h0M260 20h0M268 20h0M276 20h0M284 20h0M292 20h0M300 20h0M308 20h0M316 20h0M324 20h0M332 20h0M340 20h0M348 20h0M356 20h0M364 20h0M372 20h0M380 20h0M388 20h0M396 20h0M404 20h0M412 20h0M420 20h0M428 20h0M436 20h0M444 20h0M452 20h0M460 20h0M468 20h0M476 20h0M68 28h0M76 28h0M84 28h0M92 28h0M100 28h0M108 28h0M116 28h0M124 28h0M132 28h0M140 28h0M148 28h0M156 28h0M164 28h0M172 28h0M228 28h0M236 28h0M244 28h0M252 28h0M260 28h0M268 28h0M276 28h0M284 28h0M292 28h0M300 28h0M308 28h0M316 28h0M324 28h0M332 28h0M340 28h0M348 28h0M356 28h0M364 28h0M372 28h0M380 28h0M388 28h0M396 28h0M404 28h0M412 28h0M420 28h0M428 28h0M436 28h0M444 28h0M452 28h0M460 28h0M468 28h0M476 28h0M76 36h0M84 36h0M92 36h0M100 36h0M108 36h0M116 36h0M124 36h0M132 36h0M140 36h0M148 36h0M156 36h0M164 36h0M236 36h0M244 36h0M252 36h0M260 36h0M268 36h0M276 36h0M284 36h0M292 36h0M300 36h0M308 36h0M316 36h0M324 36h0M332 36h0M340 36h0M348 36h0M356 36h0M364 36h0M372 36h0M380 36h0M388 36h0M396 36h0M404 36h0M412 36h0M420 36h0M428 36h0M436 36h0M76 44h0M84 44h0M92 44h0M100 44h0M108 44h0M116 44h0M124 44h0M132 44h0M140 44h0M148 44h0M236 44h0M244 44h0M252 44h0M260 44h0M268 44h0M276 44h0M284 44h0M292 44h0M300 44h0M308 44h0M316 44h0M324 44h0M332 44h0M340 44h0M348 44h0M356 44h0M364 44h0M372 44h0M380 44h0M388 44h0M396 44h0M404 44h0M412 44h0M428 44h0M84 52h0M92 52h0M100 52h0M108 52h0M116 52h0M124 52h0M132 52h0M140 52h0M228 52h0M236 52h0M244 52h0M252 52h0M260 52h0M268 52h0M276 52h0M284 52h0M292 52h0M300 52h0M308 52h0M316 52h0M324 52h0M332 52h0M340 52h0M348 52h0M356 52h0M364 52h0M372 52h0M380 52h0M388 52h0M396 52h0M404 52h0M420 52h0M92 60h0M100 60h0M108 60h0M116 60h0M124 60h0M132 60h0M140 60h0M228 60h0M236 60h0M244 60h0M252 60h0M260 60h0M268 60h0M276 60h0M284 60h0M292 60h0M300 60h0M308 60h0M316 60h0M324 60h0M332 60h0M340 60h0M348 60h0M356 60h0M364 60h0M372 60h0M380 60h0M388 60h0M396 60h0M404 60h0M108 68h0M116 68h0M124 68h0M132 68h0M140 68h0M148 68h0M156 68h0M220 68h0M228 68h0M236 68h0M244 68h0M252 68h0M260 68h0M268 68h0M276 68h0M284 68h0M292 68h0M300 68h0M308 68h0M316 68h0M324 68h0M332 68h0M340 68h0M348 68h0M356 68h0M364 68h0M372 68h0M380 68h0M388 68h0M124 76h0M132 76h0M140 76h0M148 76h0M220 76h0M228 76h0M236 76h0M244 76h0M252 76h0M260 76h0M268 76h0M276 76h0M284 76h0M292 76h0M300 76h0M308 76h0M316 76h0M324 76h0M332 76h0M340 76h0M348 76h0M356 76h0M364 76h0M372 76h0M380 76h0M388 76h0M140 84h0M148 84h0M156 84h0M164 84h0M172 84h0M180 84h0M228 84h0M236 84h0M244 84h0M252 84h0M260 84h0M268 84h0M276 84h0M284 84h0M292 84h0M300 84h0M308 84h0M372 84h0M380 84h0M388 84h0M396 84h0M404 84h0M412 84h0M140 92h0M148 92h0M156 92h0M164 92h0M172 92h0M180 92h0M188 92h0M252 92h0M260 92h0M268 92h0M276 92h0M284 92h0M292 92h0M300 92h0M308 92h0M372 92h0M380 92h0M388 92h0M396 92h0M404 92h0M412 92h0M420 92h0M428 92h0M140 100h0M148 100h0M156 100h0M164 100h0M172 100h0M180 100h0M188 100h0M196 100h0M260 100h0M268 100h0M276 100h0M284 100h0M292 100h0M300 100h0M380 100h0M388 100h0M396 100h0M404 100h0M412 100h0M420 100h0M428 100h0M436 100h0M444 100h0M148 108h0M156 108h0M164 108h0M172 108h0M180 108h0M188 108h0M260 108h0M268 108h0M276 108h0M284 108h0M292 108h0M300 108h0M396 108h0M404 108h0M412 108h0M420 108h0M428 108h0M436 108h0M148 116h0M156 116h0M164 116h0M172 116h0M180 116h0M188 116h0M260 116h0M268 116h0M276 116h0M284 116h0M292 116h0M396 116h0M404 116h0M412 116h0M420 116h0M428 116h0M436 116h0M444 116h0M148 124h0M156 124h0M164 124h0M172 124h0M180 124h0M268 124h0M276 124h0M284 124h0M396 124h0M404 124h0M412 124h0M420 124h0M428 124h0M436 124h0M444 124h0M148 132h0M156 132h0M164 132h0M428 132h0M436 132h0M444 132h0M476 132h0M148 140h0M156 140h0M468 140h0M476 140h0M148 148h0" fill="none" stroke="#C9D3E0" stroke-width="4.6" stroke-linecap="round"></path>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ CATALOGUE : FILTRES + CARTES (T005/T008) -->
+<section class="mod" id="catalogue" aria-labelledby="catalogue-t">
+  <div class="mod-inner">
+    <div class="sec-head">
+      <div class="eyebrow">TOUTE L'OFFRE</div>
+      <h2 class="title-accent" id="catalogue-t">Le catalogue des services</h2>
+      <p class="sub">Filtrez par type de service, puis vérifiez l'offre avec votre équipement ou avec le contrat que vous détenez. Les gammes citées sur chaque carte sont indicatives : elles vous aident à vérifier que votre équipement peut être couvert, et rien ne vous est demandé à ce stade.</p>
+    </div>
+
+    <div class="filtres">
+      <!-- 1. Type de service : les 7 categories du PIM, sur 2 lignes si besoin. -->
+      <div class="filtre-bloc">
+        <div class="filtre-lbl" id="f-cat-lbl"><span id="ann-cat-lbl">TYPE DE SERVICE</span></div>
+        <div class="puces" id="f-categories" role="group" aria-labelledby="f-cat-lbl"><!-- rendu en JS --></div>
+      </div>
+
+      <!-- 2. La ligne des tests (decision 0008, D1). Les deux controles font la
+           meme chose : confronter l'offre a un acquis, un equipement a gauche,
+           un contrat a droite. Ils vont donc ensemble, et non sur deux lignes.
+           La ligne de puces « famille de produits » a disparu : la recherche
+           la porte desormais (0008 D3). -->
+      <div class="tests-rang">
+        <div class="filtre-bloc recherche-bloc">
+          <label class="filtre-lbl" for="q">VÉRIFIER AVEC MON ÉQUIPEMENT</label>
+          <!-- Recherche guidee. Pas de recherche libre : il faut choisir dans
+               la liste, Entree seule ne fait rien. Le popover s'ouvre des le
+               focus, sur les 5 familles, pour montrer qu'on peut chercher
+               autrement qu'avec une reference. Motif combobox. -->
+          <div class="recherche">
+            <input id="q" type="text" autocomplete="off" role="combobox"
+                   aria-expanded="false" aria-controls="q-liste" aria-autocomplete="list"
+                   aria-describedby="q-aide"
+                   placeholder="Une famille, une gamme ou une référence : onduleur, MASTERYS…">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.5" y1="15.5" x2="21" y2="21"></line></svg>
+            <button type="button" class="q-croix" id="q-croix" aria-label="Effacer la recherche" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+            </button>
+            <ul class="q-liste" id="q-liste" role="listbox"
+                aria-label="Familles et produits" hidden></ul>
+          </div>
+          <p class="q-aide" id="q-aide">Choisissez une famille de produits, ou saisissez 3 caractères pour trouver votre référence.</p>
+        </div>
+
+        <!-- Le contrat est un reglage d'affichage, jamais un filtre : il pose un
+             ruban sur les cartes couvertes et n'en retire aucune (0007 D2). -->
+        <div class="filtre-bloc filtre-contrat">
+          <div class="filtre-lbl" id="f-contrat-lbl">VÉRIFIER AVEC MON CONTRAT</div>
+          <!-- Groupe de boutons et non liste deroulante (decision 0009 D2) :
+               quatre valeurs, toutes visibles, un clic pour regler. Motif
+               radiogroup : une seule valeur a la fois, fleches pour circuler,
+               un seul arret de tabulation pour le groupe entier. -->
+          <div class="btn-groupe" id="f-contrat" role="radiogroup"
+               aria-labelledby="f-contrat-lbl" aria-describedby="contrat-aide"><!-- rendu en JS --></div>
+          <p class="q-aide" id="contrat-aide">Les services déjà couverts seront signalés sur leur carte et remontés en tête de liste. Aucun service n'est retiré.</p>
+        </div>
+      </div>
+
+      <!-- La phrase d'état visible est retirée (decision 0004, D5). Le decompte
+           reste annonce aux lecteurs d'ecran : sans lui, un filtre applique ne
+           produirait plus aucun retour percevable. -->
+      <p class="md-sr" id="filtre-etat" role="status"></p>
+    </div>
+
+    <!-- Rang de commandes au-dessus de la grille : remise a zero a gauche
+         (decision 0010 D4), tri a droite (decision 0009 D3). -->
+    <div class="grille-rang">
+      <!-- Decompte visible. Il est aria-hidden : la meme information est deja
+           annoncee par #filtre-etat, en plus complet (page et tri). Sans ca,
+           un lecteur d'ecran la lirait deux fois. -->
+      <p class="grille-cpt" id="grille-cpt" aria-hidden="true" hidden></p>
+      <button type="button" class="raz-filtres" id="raz-filtres" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6"></path><polyline points="4,4 4,9 9,9"></polyline></svg>
+        Réinitialiser les filtres
+      </button>
+      <div class="tri-bloc">
+        <label class="tri-lbl" for="f-tri">Trier par</label>
+        <div class="select-wrap">
+          <select id="f-tri"><!-- rendu en JS --></select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6,9 12,15 18,9"></polyline></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="svc-grid" id="svc-grid"><!-- rendu depuis services-data.js --></div>
+    <p class="svc-vide" id="svc-vide" hidden></p>
+
+    <!-- Pagination numerotee, sur le modele du listing produits (D4). -->
+    <nav class="pagin" id="pagin" aria-label="Pages du catalogue" hidden><!-- rendu en JS --></nav>
+
+    <!-- Rappel de fin de grille. Deux raisons : on peut avoir oublie qu'une
+         demande est en cours, et au clavier ce bouton evite de remonter toute
+         la page pour atteindre le bouton flottant (revue 0.2.0). -->
+    <div class="fin-grille" id="fin-grille" hidden>
+      <button type="button" class="btn-voir-demande" id="voir-demande">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14l-1.2 12H6.2L5 7zM9 7V5a3 3 0 0 1 6 0v2"/></svg>
+        <span>Voir ma demande</span>
+        <span class="vd-cpt" id="vd-cpt">0</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== BANDEAU HUMAIN -->
+<section class="humain">
+  <div class="humain-inner">
+    <div>
+      <h2>Vous parlez directement à un ingénieur SOCOMEC.</h2>
+      <p>Vos interlocuteurs sont des ingénieurs et techniciens SOCOMEC, formés en usine, présents partout en France. Une procédure d'escalade interne donne accès à tous les niveaux d'expertise, jusqu'au constructeur.</p>
+      <div class="humain-sub">400 experts · 110 000 interventions par an</div>
+    </div>
+    <div class="humain-side">
+      <div class="region">
+        <label for="region">Votre région</label>
+        <div class="region-wrap">
+          <select id="region">
+            <option>Auvergne-Rhône-Alpes</option>
+            <option>Bourgogne-Franche-Comté</option>
+            <option>Bretagne</option>
+            <option>Centre-Val de Loire</option>
+            <option>Corse</option>
+            <option selected>Grand Est</option>
+            <option>Hauts-de-France</option>
+            <option>Île-de-France</option>
+            <option>Normandie</option>
+            <option>Nouvelle-Aquitaine</option>
+            <option>Occitanie</option>
+            <option>Pays de la Loire</option>
+            <option>Provence-Alpes-Côte d'Azur</option>
+          </select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6,9 12,15 18,9"></polyline></svg>
+        </div>
+      </div>
+      <div class="equipe">
+        <!-- Portraits décoratifs (alt vide) : le paragraphe voisin dit déjà
+             « des ingénieurs et techniciens SOCOMEC ».
+             D4 : vignettes de 160 px, affichées à 48 px (mobile) et 56 px.
+             Les originaux de 721 à 917 px restent dans assets/, les trois
+             archives les chargent encore. -->
+        <div class="portraits">
+          <div class="p"><div class="img-slot shape-circle"><img src="assets/portrait-expert-1.webp" alt="" loading="lazy"></div></div>
+          <div class="p"><div class="img-slot shape-circle"><img src="assets/portrait-expert-2.webp" alt="" loading="lazy"></div></div>
+          <div class="p"><div class="img-slot shape-circle"><img src="assets/portrait-expert-3.webp" alt="" loading="lazy"></div></div>
+          <div class="p"><div class="img-slot shape-circle"><img src="assets/portrait-expert-4.webp" alt="" loading="lazy"></div></div>
+        </div>
+        <div>
+          <div class="equipe-nb">15 ingénieurs SOCOMEC</div>
+          <div class="equipe-lieu">dans votre région</div>
+        </div>
+      </div>
+      <button type="button" class="btn-expert" id="contacter-expert">Contacter un expert
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13,6 19,12 13,18"></polyline></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ FOOTER -->
+<footer>
+  <div class="ft-newsrow">
+    <div class="ft-news-band">
+    <div class="ft-news">
+      <div class="ft-news-inner">
+        <h2>Restez informé(e)s de nos actualités</h2>
+        <div class="ft-fields">
+          <input class="ft-field" placeholder="Email professionnel *" aria-label="Email professionnel">
+          <div class="ft-select-wrap">
+            <select class="ft-select" aria-label="Votre activité">
+              <option>Votre activité *</option><option>Bureau d'études</option><option>Installateur / intégrateur</option><option>Industriel</option><option>Data center</option><option>Autre</option>
+            </select>
+            <svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </div>
+        </div>
+        <p class="ft-legal-text">Veuillez saisir une adresse e-mail professionnelle (les domaines Yahoo, Gmail et Hotmail ne sont pas acceptés). En validant votre demande, vous acceptez de recevoir la newsletter de SOCOMEC. Vous pouvez vous désinscrire à tout moment via le lien de désabonnement en bas de vos e-mails ou en écrivant à <a href="mailto:dataprivacy@socomec.com">dataprivacy@socomec.com</a>.</p>
+      </div>
+    </div>
+    <div class="ft-arrow"><svg viewBox="0 0 48 24"><line x1="4" y1="12" x2="42" y2="12"></line><polyline points="32,3 42,12 32,21"></polyline></svg></div>
+    </div>
+  </div>
+  <div class="ft-cols">
+    <div class="ft-cols-inner">
+      <div class="ft-col"><div class="ct">Actualités</div><a href="#">Événements</a><a href="#">Espace presse</a></div>
+      <div class="ft-col"><div class="ct">A propos de SOCOMEC</div><a href="#">Qui sommes nous</a><a href="#">Nous rejoindre</a></div>
+      <div class="ft-col"><div class="ct">Portails</div><a href="#">E-order</a><a href="#">Partenaires &amp; distributeurs</a><a href="#">Fournisseurs</a></div>
+      <div class="ft-col"><div class="ct">Contact</div><a href="devis.html">Demande de devis</a><a href="#">Support Technique</a></div>
+      <div class="ft-col"><div class="ct">Cybersécurité</div><a href="#">Signaler un incident</a><a href="#">Politique de divulgation des vulnérabilités</a></div>
+      <div class="ft-brand">
+        <img src="assets/logo-socomec.svg" alt="SOCOMEC" style="height:28px" loading="lazy">
+        <div class="ft-social"><div class="s">in</div><div class="s">f</div><div class="s"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:var(--bleu-lien)"><polygon points="6,4 20,12 6,20"></polygon></svg></div></div>
+        <button class="ft-country">COUNTRY SWITCHER<svg viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"></polyline></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <div class="ft-bar-inner">
+      <a href="#">CGU</a><a href="#">Politique de confidentialité</a><a href="#">Politique de cookies</a><a href="#">Mentions Légales</a><a href="#">Accessibilité</a>
+      <div class="ft-right">
+        <span class="cr">Copyright © All rights reserved</span>
+        <div class="ft-top" id="go-top"><span>TOP</span><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="6"></line><polyline points="6,11 12,5 18,11"></polyline></svg></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/services-data.js"></script>
+<script src="assets/ma-demande.js"></script>
+<script src="assets/hors-perimetre.js"></script>
+<script>
+/* =====================================================================
+   HUB SERVICES v2 : rendu et filtres
+   Tout le contenu vient de services-data.js (source de vérité unique).
+   Le responsive est piloté par CSS ; le JS ne gère que l'ÉTAT.
+   « Ma demande » n'est pas encore branché : c'est la phase 4 (T009/T010).
+   ===================================================================== */
+(function(){
+  "use strict";
+
+  var D = window.SERVICES_DATA;
+  function $(s,c){ return (c||document).querySelector(s); }
+  function all(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
+  function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+  var COCHE  = '<svg viewBox="0 0 24 24"><polyline points="5,13 10,18 19,7"></polyline></svg>';
+
+  /* Ajout à la demande (T009). Le libellé porte l'état ; la pastille en
+     angle de carte donne le repère visuel (comme la v1). */
+  var LIB_AJOUT = "Ajouter à ma demande";
+  var LIB_DEDANS = "Dans ma demande";
+  function boutonAjout(id){
+    return '<button type="button" class="svc-add" data-ajout="' + esc(id) + '" ' +
+           'aria-pressed="false">' + LIB_AJOUT + '</button>';
+  }
+  function pastille(){
+    return '<span class="svc-check" aria-hidden="true">' + COCHE + '</span>';
+  }
+
+  /* ===================================================================
+     CARTES DU CATALOGUE (T005, refondu en 0.5.5)
+     La zone transversale « Services professionnels » disparait : ses 4
+     services rejoignent la grille, rattaches a « conseil et support »
+     (decision 0004). Seules les 3 formules de contrat restent hors grille,
+     portees par la synthese comparee de la page contrat de maintenance.
+     =================================================================== */
+  var catalogue = D.services.filter(function(s){ return !s.formule; });
+
+  $("#svc-grid").innerHTML = catalogue.map(function(s){
+    var tags = s.familles.map(function(f){
+      return '<span class="tag">' + esc(D.nomFamille(f)) + '</span>';
+    }).join("");
+    var gammes = s.gammes.length
+      ? '<div class="gammes"><b>Gammes concernées</b> · ' + esc(s.gammes.join(", ")) + '</div>'
+      : '';
+    return '<article class="svc" data-id="' + esc(s.id) + '">' +
+      /* Ruban d'inclusion : rempli par majRubans() selon le contrat declare.
+         Place avant le titre dans le flux, donc lu avec la carte ; place en
+         coin par la CSS, donc visible d'un coup d'oeil. */
+      '<div class="svc-ruban" hidden></div>' +
+      '<h3>' + esc(s.nom) + '</h3>' +
+      '<div class="svc-more">' +
+        '<div class="svc-cat">' + esc(D.nomCategorie(s.categorie)) + '</div>' +
+        '<div class="tags">' + tags + '</div>' +
+        '<p>' + esc(s.description) + '</p>' +
+        gammes +
+        (s.pageDetail
+          ? '<a class="more" href="' + esc(s.pageDetail) + '">En savoir plus' +
+            '<span class="md-sr"> sur ' + esc(s.nom) + '</span> →</a>'
+          : '') +
+        boutonAjout(s.id) +
+      '</div>' + pastille() + '</article>';
+  }).join("");
+
+  var cartes = all(".svc", $("#svc-grid"));
+  var parId = {};
+  catalogue.forEach(function(s){ parId[s.id] = s; });
+
+  /* ===================================================================
+     FILTRES (decision 0004, D2 et D4)
+     Trois fonctions : type de service, famille de produits, contrat detenu.
+     Un filtre actif MASQUE les cartes hors perimetre (une grille a moitie
+     eteinte avait ete signalee en revue). Le contrat fait exception : il
+     pose un badge et ne retire rien, sauf si l'utilisateur coche lui-meme
+     « ne montrer que les services inclus ».
+     =================================================================== */
+  var PAR_PAGE = 12;
+
+  /* ===================================================================
+     ETAT DES FILTRES (decisions 0007 et 0008)
+     Deux dimensions et un reglage :
+     - `categorie` : les puces, une a la fois ;
+     - `choix`     : l'equipement, par la recherche. Une FAMILLE ou un
+                     PRODUIT, jamais les deux : choisir l'un remplace l'autre
+                     (0008 D3). La ligne de puces « familles » a disparu ;
+     - `contrat`   : un reglage d'AFFICHAGE. Il pose un ruban et ne retire
+                     jamais une carte (0007 D2) : il n'entre donc ni dans
+                     retenues(), ni dans combien().
+     =================================================================== */
+  var etat = { categorie:null, choix:null, contrat:"", tri:"recommande", page:1 };
+
+  /* Tri (decision 0009 D3). « Recommande » est l'ordre des donnees ; les
+     tris alphabetiques passent par localeCompare fr, donc accents et casse
+     ignores ; « Contrat » remonte les services inclus sans rien retirer et
+     conserve l'ordre recommande dans chaque groupe. */
+  var TRIS = [
+    { id:'recommande', nom:'Recommandé' },
+    { id:'contrat',    nom:'Contrat' },
+    { id:'az',         nom:'A → Z' },
+    { id:'za',         nom:'Z → A' }
+  ];
+  /* Le tri par defaut depend du contrat : declarer une formule bascule sur
+     « Contrat », revenir a « Aucun » rend « Recommande ». */
+  function triParDefaut(){ return etat.contrat ? "contrat" : "recommande"; }
+
+  function puce(id, libelle){
+    /* Le motif d'indisponibilite (D15) vit dans un noeud fixe : rebatir le
+       libelle a chaque rendu ferait perdre le focus a qui parcourt le rang. */
+    return '<button type="button" class="chip" data-categorie="' + esc(id||"") + '" ' +
+           'aria-pressed="false"><span>' + esc(libelle) + '</span>' +
+           '<span class="cpt" aria-hidden="true">0</span>' +
+           '<span class="md-sr" data-motif></span></button>';
+  }
+
+  /* On ne propose qu'une valeur reellement portee par le catalogue. */
+  $("#f-categories").innerHTML = puce("", "Tous les services") +
+    D.categories.filter(function(c){
+      return catalogue.some(function(s){ return s.categorie === c.id; });
+    }).map(function(c){ return puce(c.id, c.nom); }).join("");
+
+  var FORMULES = [{ id:"", nom:"Aucun" }].concat(D.formulesContrat);
+  $("#f-contrat").innerHTML = FORMULES.map(function(f, i){
+    return '<button type="button" class="bg-opt" role="radio" data-contrat="' + esc(f.id) + '" ' +
+           'aria-checked="' + (i === 0 ? "true" : "false") + '" ' +
+           'tabindex="' + (i === 0 ? "0" : "-1") + '">' + esc(f.nom) + '</button>';
+  }).join("");
+
+  $("#f-tri").innerHTML = TRIS.map(function(t){
+    return '<option value="' + esc(t.id) + '">' + esc(t.nom) + '</option>';
+  }).join("");
+
+  function normaliser(t){
+    return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  }
+
+  /* Un service est compatible avec un produit si l'une de ses gammes contient
+     celle du produit : « MASTERYS » couvre « MASTERYS GP4 » comme
+     « MASTERYS de 10 a 40 kVA ». */
+  function compatible(s, produit){
+    var g = normaliser(produit.gamme);
+    return s.gammes.some(function(x){ return normaliser(x).indexOf(g) > -1; });
+  }
+
+  /* Le choix d'equipement, famille ou produit, se teste au meme endroit. */
+  function retientChoix(s, choix){
+    if(!choix) return true;
+    return choix.type === "famille"
+      ? s.familles.indexOf(choix.f.id) > -1
+      : compatible(s, choix.p);
+  }
+
+  function nomFormule(id){
+    for(var i=0;i<D.formulesContrat.length;i++)
+      if(D.formulesContrat[i].id===id) return D.formulesContrat[i].nom;
+    return id;
+  }
+
+  function retenues(){
+    return cartes.filter(function(c){
+      var s = parId[c.getAttribute("data-id")];
+      if(etat.categorie && s.categorie !== etat.categorie) return false;
+      return retientChoix(s, etat.choix);
+    });
+  }
+
+  /* D15 : combien de services donnerait ce couple categorie x choix. Sert a
+     eteindre d'avance aussi bien les puces que les suggestions de la
+     recherche (0008 : la regle s'etend aux suggestions). */
+  function combien(categorie, choix){
+    var n = 0;
+    for(var i = 0; i < catalogue.length; i++){
+      var s = catalogue[i];
+      if(categorie && s.categorie !== categorie) continue;
+      if(!retientChoix(s, choix)) continue;
+      n++;
+    }
+    return n;
+  }
+
+  /* ------------------------------------------- Tri de la liste retenue
+     Les cartes gardent leur ordre dans le DOM ; c'est la propriete CSS
+     `order` qui les replace. Rien ne bouge dans l'arbre, donc rien ne perd
+     le focus ni ne se reconstruit. */
+  var rangRecommande = {};
+  catalogue.forEach(function(s, i){ rangRecommande[s.id] = i; });
+
+  function trier(liste){
+    var l = liste.slice();
+    function rec(a, b){
+      return rangRecommande[a.getAttribute("data-id")] - rangRecommande[b.getAttribute("data-id")];
+    }
+    if(etat.tri === "contrat" && etat.contrat){
+      l.sort(function(a, b){
+        var ia = parId[a.getAttribute("data-id")].contrats.indexOf(etat.contrat) > -1 ? 0 : 1;
+        var ib = parId[b.getAttribute("data-id")].contrats.indexOf(etat.contrat) > -1 ? 0 : 1;
+        return ia !== ib ? ia - ib : rec(a, b);
+      });
+    } else if(etat.tri === "az" || etat.tri === "za"){
+      var sens = etat.tri === "az" ? 1 : -1;
+      l.sort(function(a, b){
+        return sens * parId[a.getAttribute("data-id")].nom.localeCompare(
+          parId[b.getAttribute("data-id")].nom, "fr", { sensitivity:"base" });
+      });
+    } else {
+      l.sort(rec);
+    }
+    return l;
+  }
+
+  function nomTri(id){
+    for(var i=0;i<TRIS.length;i++) if(TRIS[i].id===id) return TRIS[i].nom;
+    return id;
+  }
+
+  /* ------------------------------------------- Ruban « inclus dans mon contrat » */
+  function majRubans(){
+    cartes.forEach(function(c){
+      var s = parId[c.getAttribute("data-id")];
+      var r = c.querySelector(".svc-ruban");
+      var inclus = !!etat.contrat && s.contrats.indexOf(etat.contrat) > -1;
+      r.hidden = !inclus;
+      /* Une carte non incluse ne porte rien : pas de mention « non inclus »
+         (decision 0008 D2, qui revise la 0007). */
+      r.innerHTML = inclus
+        ? COCHE + '<span>Inclus ' + esc(nomFormule(etat.contrat)) + '</span>'
+        : "";
+    });
+  }
+
+  /* ------------------------------------------- Etat des puces et compteurs */
+  var MOTIF_VIDE = ", aucun service avec les filtres actuels";
+
+  /* D15 : une puce qui ne donnerait rien s'eteint AVANT le clic.
+     aria-disabled et non disabled : la puce reste focalisable, donc
+     decouvrable au clavier, et annonce elle-meme pourquoi elle est hors jeu.
+     La puce active ne s'eteint jamais, « Tous les services » non plus : ce
+     sont les sorties. */
+  function majPuces(){
+    var pris = window.MaDemande ? window.MaDemande.liste() : [];
+    all('.chip[data-categorie]').forEach(function(b){
+      var v = b.getAttribute("data-categorie");
+      var on = (etat.categorie || "") === v;
+      var eteinte = !on && !!v && combien(v, etat.choix) === 0;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      if(eteinte) b.setAttribute("aria-disabled", "true");
+      else        b.removeAttribute("aria-disabled");
+      b.querySelector("[data-motif]").textContent = eteinte ? MOTIF_VIDE : "";
+      var n = pris.filter(function(id){
+        var sv = parId[id];
+        return sv ? (v ? sv.categorie === v : true) : false;
+      }).length;
+      var cpt = b.querySelector(".cpt");
+      cpt.textContent = n;
+      cpt.classList.toggle("on", n > 0);
+    });
+  }
+
+  /* ------------------------------------------- Pagination (decision 0004, D4) */
+  function majPagination(pages){
+    var nav = $("#pagin");
+    if(pages <= 1){ nav.hidden = true; nav.innerHTML = ""; return; }
+    var fleche = function(d){
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="' +
+             (d === "g" ? "15,5 8,12 15,19" : "9,5 16,12 9,19") + '"></polyline></svg>';
+    };
+    var h = '<button type="button" class="pg" data-page="' + (etat.page - 1) + '"' +
+            (etat.page === 1 ? " disabled" : "") + '>' + fleche("g") +
+            '<span class="md-sr">Page précédente</span></button>';
+    for(var n = 1; n <= pages; n++){
+      h += '<button type="button" class="pg" data-page="' + n + '"' +
+           (n === etat.page ? ' aria-current="true"' : "") + '>' + n +
+           '<span class="md-sr"> sur ' + pages + '</span></button>';
+    }
+    h += '<button type="button" class="pg" data-page="' + (etat.page + 1) + '"' +
+         (etat.page === pages ? " disabled" : "") + '>' + fleche("d") +
+         '<span class="md-sr">Page suivante</span></button>';
+    nav.innerHTML = h;
+    nav.hidden = false;
+  }
+
+  function rendre(){
+    var liste = trier(retenues());
+    var pages = Math.max(1, Math.ceil(liste.length / PAR_PAGE));
+    if(etat.page > pages) etat.page = pages;
+    var debut = (etat.page - 1) * PAR_PAGE;
+
+    cartes.forEach(function(c){ c.hidden = true; });
+    liste.forEach(function(c, i){ c.style.order = i; });
+    liste.slice(debut, debut + PAR_PAGE).forEach(function(c){ c.hidden = false; });
+
+    majRubans();
+    majPuces();
+    majPagination(pages);
+    majCommandes();
+
+    var vide = $("#svc-vide"), etatEl = $("#filtre-etat"), cpt = $("#grille-cpt");
+    /* Le decompte visible disparait quand il n'y a rien a compter : l'etat
+       vide juste dessous porte deja le message, et sa sortie. */
+    cpt.hidden = !liste.length;
+    if(liste.length){
+      var affichees = Math.min(PAR_PAGE, liste.length - debut);
+      var pluriel = affichees > 1 ? "s" : "";
+      cpt.innerHTML = "<b>" + affichees + "</b> service" + pluriel +
+        " affiché" + pluriel + " sur un total de <b>" + liste.length + "</b>";
+    }
+    if(!liste.length){
+      vide.hidden = false;
+      vide.innerHTML = 'Aucun service ne répond à cette combinaison de filtres. ' +
+        '<button type="button" class="raz" id="raz">Tout afficher</button>';
+      etatEl.textContent = "Aucun service ne répond à cette combinaison de filtres.";
+    } else {
+      vide.hidden = true;
+      /* La phrase d'etat visible est retiree (D5) ; l'annonce reste pour les
+         lecteurs d'ecran, sinon un filtre applique n'aurait plus de retour. */
+      etatEl.textContent = liste.length + (liste.length === 1 ? " service" : " services") +
+        " après filtrage" + (pages > 1 ? ", page " + etat.page + " sur " + pages : "") +
+        ", tri : " + nomTri(etat.tri) + ".";
+    }
+  }
+
+  /* ------------------------------------------- Rang de commandes
+     Le selecteur de tri reflete l'etat, « Contrat » n'etant offert qu'avec un
+     contrat declare. La remise a zero n'apparait que s'il y a quelque chose a
+     remettre : filtre, equipement retenu, ou tri qui n'est pas celui d'arrivee.
+     Le contrat, lui, est un reglage d'affichage : il n'est pas remis a zero. */
+  function aFiltrer(){
+    return !!etat.categorie || !!etat.choix || etat.tri !== triParDefaut();
+  }
+
+  function majCommandes(){
+    var sel = $("#f-tri");
+    sel.value = etat.tri;
+    all("option", sel).forEach(function(o){
+      if(o.value === "contrat") o.disabled = !etat.contrat;
+    });
+    $("#raz-filtres").hidden = !aFiltrer();
+  }
+
+  function reinitialiser(){
+    etat.categorie = null;
+    etat.tri = triParDefaut();
+    oublierChoix();                  /* remet la page a 1 et appelle rendre() */
+  }
+
+  $("#f-tri").addEventListener("change", function(e){
+    etat.tri = e.target.value;
+    etat.page = 1;
+    rendre();
+  });
+
+  $("#raz-filtres").addEventListener("click", function(){
+    reinitialiser();
+    /* Le bouton disparait avec le dernier filtre : sans cela le focus
+       retomberait sur le corps du document. */
+    var premier = $("#f-categories .chip");
+    if(premier) premier.focus();
+  });
+
+  /* ------------------------------------------- Interactions des filtres */
+  $("#f-categories").addEventListener("click", function(e){
+    var b = e.target.closest(".chip");
+    if(!b) return;
+    if(b.getAttribute("aria-disabled") === "true") return;   /* D15 */
+    var v = b.getAttribute("data-categorie") || null;
+    etat.categorie = (etat.categorie === v) ? null : v;      /* re-clic = deselection */
+    etat.page = 1;
+    rendre();
+  });
+
+  /* Le contrat ne filtre rien : il change ce que les cartes affichent et
+     l'ordre dans lequel elles passent. Comme il reordonne, il ramene en
+     page 1 : rester en page 2 ferait defiler une liste qui n'est plus la
+     meme (decision 0009 D3). */
+  function poserContrat(v){
+    var avant = etat.tri;
+    etat.contrat = v;
+    if(v && etat.tri === "recommande")      etat.tri = "contrat";
+    else if(!v && etat.tri === "contrat")   etat.tri = "recommande";
+    all('#f-contrat .bg-opt').forEach(function(b){
+      var on = (b.getAttribute("data-contrat") || "") === (v || "");
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+    });
+    etat.page = 1;
+    rendre();
+    return etat.tri !== avant;
+  }
+
+  $("#f-contrat").addEventListener("click", function(e){
+    var b = e.target.closest(".bg-opt");
+    if(b) poserContrat(b.getAttribute("data-contrat") || "");
+  });
+
+  /* Motif radiogroup : les fleches circulent dans le groupe et posent la
+     valeur au passage, Origine et Fin vont aux extremites. */
+  $("#f-contrat").addEventListener("keydown", function(e){
+    var opts = all('#f-contrat .bg-opt');
+    var i = opts.indexOf(document.activeElement);
+    if(i < 0) return;
+    var j = null;
+    if(e.key === "ArrowRight" || e.key === "ArrowDown") j = (i + 1) % opts.length;
+    else if(e.key === "ArrowLeft" || e.key === "ArrowUp") j = (i - 1 + opts.length) % opts.length;
+    else if(e.key === "Home") j = 0;
+    else if(e.key === "End") j = opts.length - 1;
+    if(j === null) return;
+    e.preventDefault();
+    poserContrat(opts[j].getAttribute("data-contrat") || "");
+    opts[j].focus();
+  });
+
+  /* Changer de page ramene en haut de la grille : sans ca, on atterrit au
+     milieu d'une liste qu'on vient de remplacer. */
+  $("#pagin").addEventListener("click", function(e){
+    var b = e.target.closest(".pg");
+    if(!b || b.disabled) return;
+    etat.page = +b.getAttribute("data-page");
+    rendre();
+    var t = $("#catalogue");
+    window.scrollTo({ top:t.getBoundingClientRect().top + window.scrollY - 12, behavior:"smooth" });
+    var actif = $('.pg[aria-current="true"]');
+    if(actif) actif.focus();
+  });
+  /* ==================================================================
+     RECHERCHE GUIDEE : FAMILLES ET PRODUITS (decision 0008, D3)
+     Motif combobox. Deux differences avec la 0.5.5 :
+     - le popover s'ouvre DES LE FOCUS, sur les 5 familles, pour montrer
+       qu'on peut entrer par l'usage (« onduleur ») et pas seulement par une
+       reference ; c'est ce qui permet de supprimer la ligne de puces ;
+     - il propose familles ET produits, groupes et etiquetes.
+     Pas de recherche libre : il faut choisir dans la liste, Entree seule ne
+     fait rien. Un seul choix a la fois : une famille remplace un produit, et
+     inversement.
+     ================================================================== */
+  var SEUIL = 3;
+  var champ = $("#q"), liste = $("#q-liste"), croix = $("#q-croix"), loupe = $(".recherche > svg");
+  var suggestions = [], actif = -1;
+
+  /* Texte de recherche d'une famille : son libelle et ses gammes. « onduleur »
+     trouve « Onduleurs (ASI) », « BESS » trouve le stockage, « MASTERYS »
+     trouve la famille ASI en plus de ses produits. */
+  var familles = D.familles.map(function(f){
+    return { type:"famille", f: f, texte: normaliser(f.nom + " " + f.gammes.join(" ")) };
+  });
+  var produits = (D.produits || []).map(function(p){
+    return { type:"produit", p: p,
+             texte: normaliser(p.ref + " " + p.gamme + " " + p.type + " " + p.usage) };
+  });
+
+  function libelleSuggestion(r){
+    return r.type === "famille" ? r.f.nom : r.p.ref;
+  }
+  function metaSuggestion(r){
+    return r.type === "famille"
+      ? (r.f.gammes.length ? r.f.gammes.join(", ") : "Famille de produits")
+      : r.p.type + " · " + r.p.usage;
+  }
+
+  function fermerListe(){
+    liste.hidden = true;
+    liste.innerHTML = "";
+    champ.setAttribute("aria-expanded", "false");
+    champ.removeAttribute("aria-activedescendant");
+    actif = -1;
+  }
+
+  function dessinerListe(){
+    if(!suggestions.length){
+      liste.innerHTML = '<li class="q-vide" role="presentation">Rien ne correspond. ' +
+                        'Essayez une famille (onduleur, mesure) ou une gamme ' +
+                        '(MASTERYS, ATyS, DIRIS).</li>';
+    } else {
+      var groupes = [
+        { cle:"famille", titre:"Familles" },
+        { cle:"produit", titre:"Produits" }
+      ];
+      liste.innerHTML = groupes.map(function(g){
+        var membres = suggestions.filter(function(r){ return r.type === g.cle; });
+        if(!membres.length) return "";
+        return '<li role="group" aria-label="' + g.titre + '">' +
+          '<div class="q-grp" aria-hidden="true">' + g.titre + '</div>' +
+          membres.map(function(r){
+            var i = suggestions.indexOf(r);
+            /* D15 etendue aux suggestions : ce qui ne donnerait rien avec la
+               categorie active est propose eteint, jamais en impasse. */
+            var eteinte = combien(etat.categorie, r) === 0;
+            return '<button type="button" class="q-opt" role="option" ' +
+              'id="q-opt-' + i + '" aria-selected="false" data-i="' + i + '"' +
+              (eteinte ? ' aria-disabled="true"' : '') + '>' +
+              '<span class="o-ref">' + esc(libelleSuggestion(r)) + '</span>' +
+              '<span class="o-meta">' + (r.type === "produit"
+                ? esc(r.p.type) + ' · <span class="o-usage">' + esc(r.p.usage) + '</span>'
+                : esc(metaSuggestion(r))) + '</span>' +
+              (eteinte ? '<span class="md-sr">' + MOTIF_VIDE + '</span>' : '') +
+              '</button>';
+          }).join("") + '</li>';
+      }).join("");
+    }
+    liste.hidden = false;
+    champ.setAttribute("aria-expanded", "true");
+  }
+
+  function surligner(i){
+    var opts = all(".q-opt", liste);
+    if(!opts.length) return;
+    if(actif > -1 && opts[actif]){
+      opts[actif].classList.remove("actif");
+      opts[actif].setAttribute("aria-selected", "false");
+    }
+    actif = (i + opts.length) % opts.length;
+    opts[actif].classList.add("actif");
+    opts[actif].setAttribute("aria-selected", "true");
+    champ.setAttribute("aria-activedescendant", opts[actif].id);
+    opts[actif].scrollIntoView({ block: "nearest" });
+  }
+
+  /* Au focus, champ vide : les familles seules, en guise de point d'entree. */
+  function chercher(){
+    var q = normaliser(champ.value);
+    if(!q){ suggestions = familles.slice(); dessinerListe(); return; }
+    if(q.length < SEUIL){ suggestions = []; fermerListe(); return; }
+    var fam = familles.filter(function(r){ return r.texte.indexOf(q) > -1; });
+    var pro = produits.filter(function(r){ return r.texte.indexOf(q) > -1; }).slice(0, 8);
+    suggestions = fam.concat(pro);
+    dessinerListe();
+  }
+
+  /* Le champ porte le terme retenu : la loupe laisse alors place a la croix
+     qui l'efface (0011 D3). Sans terme retenu, la loupe reste decorative. */
+  function majCroix(){
+    croix.hidden = !etat.choix;
+    /* La loupe est un <svg> : `hidden` n'y est pas une propriete, seulement
+       un attribut. Passer par la propriete ne ferait rien du tout. */
+    if(etat.choix) loupe.setAttribute("hidden", "");
+    else           loupe.removeAttribute("hidden");
+  }
+
+  function choisir(i){
+    var r = suggestions[i];
+    if(!r) return;
+    etat.choix = r;                 /* une famille remplace un produit, et inversement */
+    etat.page = 1;
+    champ.value = libelleSuggestion(r);
+    fermerListe();
+    majCroix();
+    rendre();
+  }
+
+  function oublierChoix(){
+    etat.choix = null;
+    etat.page = 1;
+    champ.value = "";
+    majCroix();
+    fermerListe();
+    rendre();
+  }
+
+  champ.addEventListener("input", function(){
+    /* Le champ est desormais le seul endroit ou se lit le terme retenu. Des
+       qu'on le modifie, il ne le decrit plus : on relache le choix, le
+       catalogue revient entier et les suggestions repartent du texte tape.
+       Laisser le filtre en place pendant que le texte change ferait mentir
+       le champ. */
+    if(etat.choix){
+      etat.choix = null;
+      etat.page = 1;
+      majCroix();
+      rendre();
+    }
+    chercher();
+  });
+  croix.addEventListener("click", function(){ oublierChoix(); champ.focus(); });
+  champ.addEventListener("focus", function(){ if(liste.hidden) chercher(); });
+  champ.addEventListener("keydown", function(e){
+    if(e.key === "ArrowDown"){ e.preventDefault(); if(liste.hidden) chercher(); surligner(actif + 1); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); if(liste.hidden) chercher(); surligner(actif - 1); }
+    else if(e.key === "Escape"){ fermerListe(); }
+    else if(e.key === "Enter"){
+      /* Pas de recherche libre : Entree ne vaut que pour valider un choix. */
+      e.preventDefault();
+      if(!liste.hidden && actif > -1) choisir(actif);
+    }
+  });
+  liste.addEventListener("click", function(e){
+    var b = e.target.closest(".q-opt");
+    if(!b) return;
+    if(b.getAttribute("aria-disabled") === "true") return;   /* D15 */
+    choisir(+b.getAttribute("data-i"));
+  });
+  document.addEventListener("click", function(e){
+    if(!liste.hidden && !e.target.closest(".recherche")) fermerListe();
+  });
+  /* Remise a zero depuis l'etat vide. Elle reste, bien qu'un bouton dedie
+     existe desormais (0010 D4) : au moment ou la grille est vide, c'est la
+     sortie qui tombe sous les yeux. Elle passe par la meme fonction. */
+  document.addEventListener("click", function(e){
+    if(e.target.id === "raz") reinitialiser();
+  });
+
+  /* ===================================================================
+     BRANCHEMENT DE « MA DEMANDE » (T009 / T010)
+     Le composant est la seule source d'etat ; le hub ne fait que refleter
+     ce qu'il annonce, y compris les retraits, le vidage et le remplacement
+     de formule faits depuis le panneau (EF-005).
+     =================================================================== */
+  function syncSelection(){
+    var dedans = window.MaDemande ? window.MaDemande.liste() : [];
+    all("[data-ajout]").forEach(function(b){
+      var id = b.getAttribute("data-ajout");
+      var pris = dedans.indexOf(id) > -1;
+      var carte = b.closest(".svc");
+      if(carte) carte.classList.toggle("selected", pris);
+      b.textContent = pris ? LIB_DEDANS : LIB_AJOUT;
+      b.setAttribute("aria-pressed", pris ? "true" : "false");
+      if(pris) b.setAttribute("title", "Retirer de ma demande");
+      else b.removeAttribute("title");
+    });
+  }
+
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-ajout]");
+    if(!b || !window.MaDemande) return;
+    var id = b.getAttribute("data-ajout");
+    if(window.MaDemande.contient(id)) window.MaDemande.retirer(id);
+    else                              window.MaDemande.ajouter(id);
+  });
+
+  /* Rappel de fin de grille : visible seulement quand une demande existe. */
+  function majRappel(){
+    var n = window.MaDemande ? window.MaDemande.liste().length : 0;
+    $("#fin-grille").hidden = n === 0;
+    $("#vd-cpt").textContent = n;
+  }
+  $("#voir-demande").addEventListener("click", function(){
+    if(window.MaDemande) window.MaDemande.ouvrir();
+  });
+  /* « Contacter un expert » ouvre le drawer DIRECTEMENT sur le formulaire de
+     contact : qui clique ici n'a pas trouvé son service, lui présenter une
+     demande de devis vide serait un cul-de-sac (ticket 002). */
+  $("#contacter-expert").addEventListener("click", function(){
+    if(window.MaDemande) window.MaDemande.contacterExpert();
+  });
+  /* Meme porte depuis le hero (decision 0007 D1) : un acces SAV direct, qui
+     ne passe pas par une demande de devis vide. */
+  $("#hero-contact").addEventListener("click", function(){
+    if(window.MaDemande) window.MaDemande.contacterExpert();
+  });
+
+  if(window.MaDemande){
+    /* rendre() en plus de syncSelection : les compteurs des puces de
+       categorie refletent le nombre de services retenus. */
+    window.MaDemande.on(function(){ syncSelection(); rendre(); majRappel(); });
+    syncSelection();
+    majRappel();
+  }
+
+  /* --------------------------------------------------- Ancres internes */
+  all("[data-go]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var t = document.getElementById(b.getAttribute("data-go"));
+      if(t) window.scrollTo({ top:t.getBoundingClientRect().top + window.scrollY - 12, behavior:"smooth" });
+    });
+  });
+  $("#go-top").addEventListener("click", function(){ window.scrollTo({ top:0, behavior:"smooth" }); });
+
+  /* ------------------- Barre de nav condensée : identique à la v1 */
+  (function navbarScroll(){
+    var navbar = $("#navbar"), header = $(".hdr");
+    var lastY = window.scrollY || 0, ticking = false;
+    function update(){
+      var y = window.scrollY || 0;
+      var trigger = header.offsetHeight;
+      if(y <= trigger+4)      navbar.classList.remove("visible");
+      else if(y < lastY-2)    navbar.classList.add("visible");
+      else if(y > lastY+2)    navbar.classList.remove("visible");
+      lastY = y; ticking = false;
+    }
+    window.addEventListener("scroll", function(){
+      if(!ticking){ requestAnimationFrame(update); ticking = true; }
+    }, {passive:true});
+  })();
+
+  rendre();
+})();
+</script>
+<script src="assets/annotations-data.js"></script>
+<script src="assets/annotations.js"></script>
+</body>
+</html>
