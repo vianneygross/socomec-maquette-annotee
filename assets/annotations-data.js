@@ -43,6 +43,8 @@ window.ANNOTATIONS = {
       note: 'Familles proposées dans les suggestions de recherche (ex. « Commutateurs statiques (STS) », « Coupure et commutation ») : ce sont les product category des produits.' },
     { sel: '#q-liste .o-ref-produit .o-nom', all: true, dyn: true, haut: true, clip: '#q-liste', dy: 11, carac: 'DC_P_PRODUCT-NAME',
       note: 'Nom du produit dans les suggestions de recherche (ex. « STATYS HC 400 A », « ATyS 6e 125 A »).' },
+    { sel: '#q-liste .o-prods', all: true, dyn: true, haut: true, clip: '#q-liste', dy: 9, carac: 'DC_P_PRODUCT-NAME',
+      note: 'Produits de chaque famille dans les suggestions de recherche (ex. « STATYS », « ATyS, MEDSYS ») : ce sont les product name des produits.' },
     { sel: '#q-liste .o-type', all: true, dyn: true, haut: true, clip: '#q-liste', dy: 9, carac: 'DC_P_PRODUCT_CATEGORY',
       note: 'Type de produit affiché dans les suggestions de recherche (ex. « Commutateur statique de transfert », « Inverseur de sources automatique ») : la catégorie du produit est bien renseignée dans le PIM.' },
     { sel: '#q-liste .o-usage', all: true, dyn: true, haut: true, clip: '#q-liste', dy: 9, carac: 'Aucune caractéristique', absent: true,
