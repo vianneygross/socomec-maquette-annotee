@@ -35,8 +35,8 @@ window.ANNOTATIONS = {
       note: 'Catégorie de chaque carte (Maintenance, Garantie, Conseil et support, Financement et location, Mise en service, Optimisation, Formation).' },
     { sel: '.svc .tags', all: true, carac: 'Nouvelle caractéristique à créer', absent: true,
       note: 'Familles de produits de chaque carte (Coupure et commutation, Mesure et surveillance, Onduleurs (ASI)…). Créer une nouvelle caractéristique dans le PIM.' },
-    { sel: '.svc .svc-more > p', all: true, carac: 'Résumé de l\'offre (à créer)', absent: true,
-      note: 'Il faut créer une caractéristique dans le PIM et rédiger les descriptions courtes de chaque service : 250 caractères maximum. Créer un champ pouvant s\'appeler « Résumé de l\'offre ».' },
+    { sel: '.svc .svc-more > p', all: true, carac: 'DC_P_OFFER_SUMMARY', absent: true,
+      note: 'Résumé de l\'offre : caractéristique à créer dans le PIM, avec une description courte rédigée pour chaque service (250 caractères maximum).' },
     { sel: '.svc .gammes', all: true, carac: 'DC_P_LIEN_COMPATIBLE_PRODUCTS',
       note: 'Liste « Gammes concernées » de chaque carte. Limiter à deux lignes pour les services qui ont beaucoup de produits compatibles, et ajouter « … » s\'il y a trop de produits.' },
     { sel: '#q-liste .o-usage', all: true, dyn: true, haut: true, clip: '#q-liste', dy: 9, carac: 'Aucune caractéristique', absent: true,
@@ -44,8 +44,8 @@ window.ANNOTATIONS = {
     { sel: '#ann-cat-lbl', dy: 7, carac: 'DC_P_PRODUCT_CATEGORY',
       exemple: 'Conseil et support, Financement et location, Garantie, Mise en service, Maintenance, Optimisation, Formation',
       note: 'Filtres « Type de service » : une puce par valeur de la caractéristique.' },
-    { sel: '#f-contrat', carac: 'Caractéristique multi-sélection à créer', absent: true, exemple: 'Silver, Gold, Platinum',
-      note: 'Contrats Silver, Gold, Platinum : créer dans le PIM une caractéristique à choix multiples, avec comme choix Silver, Gold et Platinum.' }
+    { sel: '#f-contrat', carac: 'DC_P_CONTRACT_LEVEL', absent: true, exemple: 'Silver, Gold, Platinum',
+      note: 'Niveau de contrat (Silver, Gold, Platinum) : caractéristique à choix multiples à créer dans le PIM, avec comme choix Silver, Gold et Platinum.' }
   ],
   'devis.html': [],
   'contrat-maintenance.html': [],
