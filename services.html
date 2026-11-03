@@ -1507,7 +1507,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
             return '<button type="button" class="q-opt" role="option" ' +
               'id="q-opt-' + i + '" aria-selected="false" data-i="' + i + '"' +
               (eteinte ? ' aria-disabled="true"' : '') + '>' +
-              '<span class="o-ref">' + esc(libelleSuggestion(r)) + '</span>' +
+              '<span class="o-ref o-ref-' + r.type + '"><span class="o-nom">' + esc(libelleSuggestion(r)) + '</span></span>' +
               '<span class="o-meta">' + (r.type === "produit"
                 ? '<span class="o-type">' + esc(r.p.type) + '</span> · <span class="o-usage">' + esc(r.p.usage) + '</span>'
                 : esc(metaSuggestion(r))) + '</span>' +
