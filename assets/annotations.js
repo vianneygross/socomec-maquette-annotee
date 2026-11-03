@@ -64,6 +64,7 @@
       '.ann-toggle[aria-pressed="false"]{background:#4A4A47}' +
       '.ann-toggle:focus-visible{outline:3px solid #FFCC00;outline-offset:2px}' +
       '.ann-off .ann-ajout,.ann-off .ann-hero-img{display:none}' +
+      'html:not(.ann-off) .o-type{margin-right:22px}' +
       '.ann-hero-img{display:flex;flex-direction:column;align-items:flex-start;margin:0 0 36px}' +
       '.ann-hero-img-cadre{width:100%;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;' +
         'background:rgba(255,240,248,.95);border:2px dashed #E6007E;color:#E6007E;font:600 16px Poppins,Roboto,sans-serif}' +

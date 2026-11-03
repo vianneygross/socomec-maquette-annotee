@@ -1509,7 +1509,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
               (eteinte ? ' aria-disabled="true"' : '') + '>' +
               '<span class="o-ref">' + esc(libelleSuggestion(r)) + '</span>' +
               '<span class="o-meta">' + (r.type === "produit"
-                ? esc(r.p.type) + ' · <span class="o-usage">' + esc(r.p.usage) + '</span>'
+                ? '<span class="o-type">' + esc(r.p.type) + '</span> · <span class="o-usage">' + esc(r.p.usage) + '</span>'
                 : esc(metaSuggestion(r))) + '</span>' +
               (eteinte ? '<span class="md-sr">' + MOTIF_VIDE + '</span>' : '') +
               '</button>';
